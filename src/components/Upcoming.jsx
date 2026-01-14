@@ -24,7 +24,7 @@ const events = [
     time: "5:00 PM - 7:00 PM",
     location: "Weight Room",
     spots: 8,
-    image: "https://images.unsplash.com/photo-1581009146145-b5ef050c149a?w=400"
+    image: "https://media.istockphoto.com/id/1937164504/photo/man-dumbbell-and-weightlifting-in-fitness-workout-or-arm-exercise-on-bench-at-indoor-gym.jpg?s=612x612&w=0&k=20&c=0hE2lkA56dsaWVkSZrmeiEf04jRC3yUrtbigGWfXvvU="
   }
 ];
 
