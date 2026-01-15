@@ -62,7 +62,7 @@ const Services = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {plans.map((plan, index) => (
+          {services.map((plan, index) => (
             <div 
               key={index}
               className={`relative bg-card p-8 rounded-lg border transition-all duration-300 hover:scale-105 ${
