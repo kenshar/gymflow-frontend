@@ -3,18 +3,71 @@ import { X } from "lucide-react";
 import { Button } from "./ui/button";
 
 const Login = ({ isOpen, onClose }) => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    console.log(email, password, name);
+    // Admin credentials
+    const adminUsername = "admin";
+    const adminPassword = "admin123";
+
+    if (username === adminUsername && password === adminPassword) {
+      setIsAuthenticated(true);
+      setError("");
+      console.log("Admin login successful");
+    } else {
+      setError("Invalid admin credentials. Please try again.");
+      setUsername("");
+      setPassword("");
+    }
   };
+
+  if (isAuthenticated) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="relative w-full max-w-md bg-card rounded-2xl shadow-2xl p-6 md:p-8 border border-border animate-in fade-in zoom-in duration-300">
+          <button
+            onClick={() => {
+              setIsAuthenticated(false);
+              onClose();
+            }}
+            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X size={24} />
+          </button>
+
+          <h2 className="text-2xl md:text-3xl font-display text-center mb-2 gradient-text">
+            Admin Dashboard
+          </h2>
+          <p className="text-muted-foreground text-center mb-6 text-sm md:text-base">
+            Welcome Admin! You have successfully logged in.
+          </p>
+
+          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6">
+            <p className="text-green-600 text-center font-medium">
+              ✓ Authentication Successful
+            </p>
+          </div>
+
+          <Button
+            onClick={() => {
+              setIsAuthenticated(false);
+              onClose();
+            }}
+            className="w-full py-3 text-sm md:text-base font-semibold"
+          >
+            Close
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -27,37 +80,21 @@ const Login = ({ isOpen, onClose }) => {
         </button>
 
         <h2 className="text-2xl md:text-3xl font-display text-center mb-2 gradient-text">
-          {isLogin ? "Welcome Back" : "Join GYMFLOW"}
+          Admin Login
         </h2>
         <p className="text-muted-foreground text-center mb-6 text-sm md:text-base">
-          {isLogin
-            ? "Sign in to access your fitness journey"
-            : "Create your account and start transforming"}
+          Sign in to access the admin panel
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
-            <div>
-              <label className="block text-sm font-medium mb-2">Full Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm md:text-base"
-                placeholder="John Doe"
-                required={!isLogin}
-              />
-            </div>
-          )}
-
           <div>
-            <label className="block text-sm font-medium mb-2">Email</label>
+            <label className="block text-sm font-medium mb-2">Username</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm md:text-base"
-              placeholder="you@example.com"
+              placeholder="Enter admin username"
               required
             />
           </div>
@@ -74,14 +111,9 @@ const Login = ({ isOpen, onClose }) => {
             />
           </div>
 
-          {isLogin && (
-            <div className="flex justify-end">
-              <button
-                type="button"
-                className="text-sm text-primary hover:underline"
-              >
-                Forgot password?
-              </button>
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+              <p className="text-red-600 text-sm">{error}</p>
             </div>
           )}
 
@@ -89,21 +121,9 @@ const Login = ({ isOpen, onClose }) => {
             type="submit"
             className="w-full py-3 text-sm md:text-base font-semibold"
           >
-            {isLogin ? "Sign In" : "Create Account"}
+            Admin Login
           </Button>
         </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-muted-foreground text-sm md:text-base">
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-primary font-semibold hover:underline"
-            >
-              {isLogin ? "Sign Up" : "Sign In"}
-            </button>
-          </p>
-        </div>
       </div>
     </div>
   );
