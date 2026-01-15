@@ -1,12 +1,13 @@
 import { Button } from "./ui/button";
 import { Check } from "lucide-react";
 
-const plans = [
+const services = [
   {
-    name: "Basic",
+    name: "Essential Fitness",
     price: "Ksh 1,500",
     period: "/month",
     features: [
+      "Cardio",
       "Access to gym floor",
       "Basic equipment usage",
       "Locker room access",
@@ -15,11 +16,13 @@ const plans = [
     popular: false
   },
   {
-    name: "Pro",
+    name: "Diverse Group Class",
     price: "Ksh 3,500",
     period: "/month",
     features: [
-      "Everything in Basic",
+      "Yoga",
+      "Zumba",
+      "Everything in Essential Fitness",
       "Group fitness classes",
       "Personal trainer (2x/month)",
       "Nutrition consultation",
@@ -28,11 +31,12 @@ const plans = [
     popular: true
   },
   {
-    name: "Elite",
+    name: "Wellness % Recovery",
     price: "9,000",
     period: "/month",
     features: [
-      "Everything in Pro",
+      "Spa Services",
+      "Physiotherapy",
       "Unlimited personal training",
       "Private locker",
       "Guest passes (4/month)",
