@@ -1,4 +1,5 @@
-import { Calendar, MapPin, Users } from "lucide-react";
+import { useState } from "react";
+import { Calendar, MapPin, Users, X } from "lucide-react";
 import { Button } from "./ui/button";
 
 const events = [
@@ -29,6 +30,57 @@ const events = [
 ];
 
 const Upcoming = () => {
+  const [showForm, setShowForm] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: ""
+  });
+
+  const handleBookNow = (eventTitle) => {
+    setSelectedEvent(eventTitle);
+    setShowForm(true);
+  };
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.email || !formData.phone) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    console.log("Event booking submitted:", {
+      ...formData,
+      event: selectedEvent
+    });
+
+    alert(`Thank you for booking ${selectedEvent}!`);
+    setFormData({
+      name: "",
+      email: "",
+      phone: ""
+    });
+    setShowForm(false);
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setFormData({
+      name: "",
+      email: "",
+      phone: ""
+    });
+  };
   return (
     <section id="upcoming" className="py-24 bg-secondary/30">
       <div className="container mx-auto px-6">
@@ -75,13 +127,93 @@ const Upcoming = () => {
                   </div>
                 </div>
                 
-                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300">
+                <Button 
+                  onClick={() => handleBookNow(event.title)}
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300"
+                >
                   Book Now
                 </Button>
               </div>
             </div>
           ))}
         </div>
+
+        {/* Event Booking Form Modal */}
+        {showForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="relative w-full max-w-md bg-card rounded-2xl shadow-2xl p-6 md:p-8 border border-border animate-in fade-in zoom-in duration-300">
+              <button
+                onClick={handleCloseForm}
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X size={24} />
+              </button>
+
+              <h2 className="text-2xl md:text-3xl font-display mb-2 gradient-text">
+                Book Your Spot
+              </h2>
+              <p className="text-muted-foreground mb-6 text-sm md:text-base">
+                Secure your place for {selectedEvent}
+              </p>
+
+              <form onSubmit={handleFormSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleFormChange}
+                    className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm md:text-base"
+                    placeholder="Your full name"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleFormChange}
+                    className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm md:text-base"
+                    placeholder="your@email.com"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Phone Number</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleFormChange}
+                    className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm md:text-base"
+                    placeholder="+254 () 123-4567"
+                    required
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full py-3 text-sm md:text-base font-semibold"
+                >
+                  Confirm Booking
+                </Button>
+
+                <button
+                  type="button"
+                  onClick={handleCloseForm}
+                  className="w-full py-3 text-sm md:text-base font-semibold border border-border rounded-lg hover:bg-background transition-colors"
+                >
+                  Cancel
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
