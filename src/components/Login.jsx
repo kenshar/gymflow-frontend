@@ -119,7 +119,7 @@ const Login = ({ isOpen, onClose }) => {
                       value={memberForm.phone}
                       onChange={(e) => setMemberForm({...memberForm, phone: e.target.value})}
                       className="w-full px-4 py-2 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
-                      placeholder="+1 (555) 123-4567"
+                      placeholder="+254 () 123-4567"
                     />
                   </div>
 
