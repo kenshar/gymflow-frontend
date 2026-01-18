@@ -11,13 +11,10 @@ const Hero = () => {
         <source src="/videos/gym-background.mp4" type="video/mp4" />
       </video>
       
-      {/* Fallback background for browsers that don't support video */}
       <div className="absolute inset-0 bg-gradient-to-br from-secondary via-background to-secondary" />
       
-      {/* Enhanced gradient overlay - stronger on the left for better text readability */}
       <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 via-50% to-transparent" />
       
-      {/* Content - Left aligned */}
       <div className="container mx-auto px-6 relative z-10 pt-32 pb-20">
         <div className="max-w-2xl">
           <h2 className="font-display text-5xl md:text-7xl lg:text-8xl leading-tight mb-6 text-left">
