@@ -82,7 +82,7 @@ const Login = ({ isOpen, onClose }) => {
 
           <div className="space-y-6">
             {/* Add Member Form */}
-            <div className="bg-background rounded-xl p-6 border border-border">
+            <div className="bg-slate-700/80 rounded-xl p-6 border border-border">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <Plus size={20} className="text-primary" />
                 Add New Member
@@ -91,44 +91,44 @@ const Login = ({ isOpen, onClose }) => {
               <form onSubmit={handleAddMember} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Name</label>
+                    <label className="block text-sm font-medium mb-2 text-foreground">Name</label>
                     <input
                       type="text"
                       value={memberForm.name}
                       onChange={(e) => setMemberForm({...memberForm, name: e.target.value})}
-                      className="w-full px-4 py-2 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                      className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm placeholder:text-muted-foreground"
                       placeholder="Member name"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Email</label>
+                    <label className="block text-sm font-medium mb-2 text-foreground">Email</label>
                     <input
                       type="email"
                       value={memberForm.email}
                       onChange={(e) => setMemberForm({...memberForm, email: e.target.value})}
-                      className="w-full px-4 py-2 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                      className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm placeholder:text-muted-foreground"
                       placeholder="member@example.com"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Phone</label>
+                    <label className="block text-sm font-medium mb-2 text-foreground">Phone</label>
                     <input
                       type="tel"
                       value={memberForm.phone}
                       onChange={(e) => setMemberForm({...memberForm, phone: e.target.value})}
-                      className="w-full px-4 py-2 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                      className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm placeholder:text-muted-foreground"
                       placeholder="+254 () 123-4567"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Membership Type</label>
+                    <label className="block text-sm font-medium mb-2 text-foreground">Membership Type</label>
                     <select
                       value={memberForm.membership}
                       onChange={(e) => setMemberForm({...memberForm, membership: e.target.value})}
-                      className="w-full px-4 py-2 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                      className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
                     >
                       <option value="Essential Fitness">Essential Fitness</option>
                       <option value="Diverse Group Class">Diverse Group Class</option>
@@ -147,7 +147,7 @@ const Login = ({ isOpen, onClose }) => {
             </div>
 
             {/* Members List */}
-            <div className="bg-background rounded-xl p-6 border border-border">
+            <div className="bg-slate-700/80 rounded-xl p-6 border border-border">
               <h3 className="text-lg font-semibold mb-4">
                 Members ({members.length})
               </h3>
@@ -159,7 +159,7 @@ const Login = ({ isOpen, onClose }) => {
                   {members.map((member) => (
                     <div
                       key={member.id}
-                      className="flex items-center justify-between p-4 bg-card border border-border rounded-lg"
+                      className="flex items-center justify-between p-4 bg-slate-600/50 border border-border rounded-lg"
                     >
                       <div className="flex-1">
                         <p className="font-medium text-sm">{member.name}</p>
@@ -216,19 +216,19 @@ const Login = ({ isOpen, onClose }) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Username</label>
+            <label className="block text-sm font-medium mb-2 text-foreground">Username</label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm md:text-base"
+              className="w-full px-4 py-3 rounded-lg bg-background text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm md:text-base placeholder:text-muted-foreground"
               placeholder="Enter admin username"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Password</label>
+            <label className="block text-sm font-medium mb-2 text-foreground">Password</label>
             <input
               type="password"
               value={password}
