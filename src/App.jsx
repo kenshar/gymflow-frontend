@@ -6,6 +6,9 @@ import Services from "./components/Services";
 import Upcoming from "./components/Upcoming";
 import Footer from "./components/Footer";
 import AdminPage from "./pages/AdminPage";
+import WorkoutLogging from "./pages/WorkoutLogging";
+import MemberProfile from "./pages/MemberProfile";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
@@ -28,8 +31,11 @@ function App() {
           }
         />
         
-        {/* Admin Page */}
+        {/* Admin Routes */}
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/workout-logging" element={<WorkoutLogging />} />
+        <Route path="/admin/member/:id" element={<MemberProfile />} />
+        <Route path="/admin/dashboard" element={<Dashboard />} />
       </Routes>
     </Router>
   );
