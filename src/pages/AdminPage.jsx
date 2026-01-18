@@ -1,16 +1,23 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, ChevronDown, ChevronUp, Edit, LogOut } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronUp, Edit, LogOut, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 const AdminPage = () => {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("members"); // "members" or "checkin"
   const [members, setMembers] = useState(() => {
     const savedMembers = localStorage.getItem("gymMembers");
     return savedMembers ? JSON.parse(savedMembers) : [];
   });
+  const [checkIns, setCheckIns] = useState(() => {
+    const savedCheckIns = localStorage.getItem("gymCheckIns");
+    return savedCheckIns ? JSON.parse(savedCheckIns) : [];
+  });
   const [expandedMember, setExpandedMember] = useState(null);
   const [editingMemberId, setEditingMemberId] = useState(null);
+  const [selectedMemberId, setSelectedMemberId] = useState("");
+  const [checkInFeedback, setCheckInFeedback] = useState(null);
   const [memberForm, setMemberForm] = useState({
     name: "",
     email: "",
@@ -54,6 +61,11 @@ const AdminPage = () => {
     localStorage.setItem("gymMembers", JSON.stringify(members));
   }, [members]);
 
+  // Save check-ins to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("gymCheckIns", JSON.stringify(checkIns));
+  }, [checkIns]);
+
   // Helper function to check if membership is expired
   const isMembershipExpired = (endDate) => {
     return new Date(endDate) < new Date();
@@ -62,6 +74,75 @@ const AdminPage = () => {
   // Helper function to check if payment is overdue
   const isPaymentOverdue = (dueDate, paymentStatus) => {
     return paymentStatus !== "paid" && new Date(dueDate) < new Date();
+  };
+
+  // Check-in logic
+  const handleCheckIn = (memberId) => {
+    const member = members.find(m => m.id === memberId);
+    if (!member) {
+      setCheckInFeedback({ type: "error", message: "Member not found" });
+      return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const hasCheckedInToday = checkIns.some(
+      ci => ci.memberId === memberId && ci.date === today
+    );
+
+    if (hasCheckedInToday) {
+      setCheckInFeedback({ 
+        type: "warning", 
+        message: `${member.name} has already checked in today!`,
+        member
+      });
+      return;
+    }
+
+    if (isMembershipExpired(member.endDate)) {
+      setCheckInFeedback({ 
+        type: "error", 
+        message: `${member.name}'s membership has expired!`,
+        member
+      });
+      return;
+    }
+
+    // Successful check-in
+    const newCheckIn = {
+      id: Date.now(),
+      memberId,
+      memberName: member.name,
+      date: today,
+      time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+    };
+    
+    setCheckIns([...checkIns, newCheckIn]);
+    
+    // Also update member's attendance records
+    setMembers(members.map(m => 
+      m.id === memberId 
+        ? {
+            ...m,
+            attendanceRecords: [
+              ...(m.attendanceRecords || []),
+              { date: today, id: Date.now(), time: newCheckIn.time }
+            ]
+          }
+        : m
+    ));
+
+    setCheckInFeedback({ 
+      type: "success", 
+      message: `✓ Welcome ${member.name}! Check-in successful.`,
+      member
+    });
+    setSelectedMemberId("");
+  };
+
+  // Get today's check-ins
+  const getTodayCheckIns = () => {
+    const today = new Date().toISOString().split('T')[0];
+    return checkIns.filter(ci => ci.date === today).sort((a, b) => b.time.localeCompare(a.time));
   };
 
   const handleAddMember = (e) => {
@@ -249,11 +330,41 @@ const AdminPage = () => {
             Logout
           </Button>
         </div>
+
+        {/* Tab Navigation */}
+        <div className="border-t border-border bg-background/50">
+          <div className="container mx-auto px-6 flex gap-4">
+            <button
+              onClick={() => setActiveTab("members")}
+              className={`px-4 py-3 font-medium transition-colors ${
+                activeTab === "members"
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground hover:text-foreground border-b-2 border-transparent"
+              }`}
+            >
+              Member Management
+            </button>
+            <button
+              onClick={() => setActiveTab("checkin")}
+              className={`px-4 py-3 font-medium transition-colors ${
+                activeTab === "checkin"
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground hover:text-foreground border-b-2 border-transparent"
+              }`}
+            >
+              Check-In
+            </button>
+          </div>
+        </div>
       </header>
 
       {/* Main Content */}
-      <main className="pt-24 pb-12">
+      <main className="pt-32 pb-12">
         <div className="container mx-auto px-6 space-y-6">
+          
+          {/* MEMBER MANAGEMENT TAB */}
+          {activeTab === "members" && (
+            <>
           {/* Add/Edit Member & Exercise Form */}
           <div className="bg-slate-700/80 rounded-xl p-8 border border-border">
             <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3">
@@ -598,6 +709,117 @@ const AdminPage = () => {
               </div>
             )}
           </div>
+            </>
+          )}
+
+          {/* CHECK-IN TAB */}
+          {activeTab === "checkin" && (
+            <>
+              {/* Check-In Section */}
+              <div className="bg-slate-700/80 rounded-xl p-8 border border-border">
+                <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3">
+                  <Clock size={24} className="text-primary" />
+                  Member Check-In
+                </h3>
+
+                {/* Member Selection */}
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-3 text-foreground">Select Member to Check In</label>
+                    <select
+                      value={selectedMemberId}
+                      onChange={(e) => setSelectedMemberId(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-2 focus:ring-primary/50 outline-none transition-all text-base"
+                    >
+                      <option value="">-- Choose a member --</option>
+                      {members.map((member) => {
+                        const activeStatus = getActiveStatus(member);
+                        return (
+                          <option key={member.id} value={member.id}>
+                            {member.name} ({activeStatus})
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  <Button
+                    onClick={() => handleCheckIn(selectedMemberId)}
+                    disabled={!selectedMemberId}
+                    className="w-full py-3 text-lg font-semibold"
+                  >
+                    <CheckCircle size={20} className="mr-2" />
+                    Check In Member
+                  </Button>
+                </div>
+
+                {/* Check-In Feedback */}
+                {checkInFeedback && (
+                  <div className={`mt-6 p-4 rounded-lg border ${
+                    checkInFeedback.type === "success"
+                      ? "bg-green-500/10 border-green-500/30"
+                      : checkInFeedback.type === "warning"
+                      ? "bg-orange-500/10 border-orange-500/30"
+                      : "bg-red-500/10 border-red-500/30"
+                  }`}>
+                    <div className="flex items-start gap-3">
+                      {checkInFeedback.type === "success" ? (
+                        <CheckCircle className="text-green-400 mt-0.5" size={20} />
+                      ) : (
+                        <AlertCircle className={checkInFeedback.type === "warning" ? "text-orange-400" : "text-red-400"} size={20} className="mt-0.5" />
+                      )}
+                      <div>
+                        <p className={`font-semibold ${
+                          checkInFeedback.type === "success"
+                            ? "text-green-400"
+                            : checkInFeedback.type === "warning"
+                            ? "text-orange-400"
+                            : "text-red-400"
+                        }`}>
+                          {checkInFeedback.message}
+                        </p>
+                        {checkInFeedback.member && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Plan: {checkInFeedback.member.planType} | Expires: {checkInFeedback.member.endDate}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Today's Check-Ins */}
+              <div className="bg-slate-700/80 rounded-xl p-8 border border-border">
+                <h3 className="text-2xl font-semibold mb-6">Today's Check-Ins</h3>
+
+                {getTodayCheckIns().length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No check-ins yet today.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {getTodayCheckIns().map((checkIn) => (
+                      <div
+                        key={checkIn.id}
+                        className="flex items-center justify-between p-4 bg-slate-600/50 rounded-lg border border-border"
+                      >
+                        <div className="flex items-center gap-3">
+                          <CheckCircle className="text-green-400" size={20} />
+                          <div>
+                            <p className="font-medium">{checkIn.memberName}</p>
+                            <p className="text-sm text-muted-foreground">{checkIn.time}</p>
+                          </div>
+                        </div>
+                        <span className="text-sm bg-green-500/20 text-green-400 px-3 py-1 rounded">
+                          Checked In
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
         </div>
       </main>
     </div>
