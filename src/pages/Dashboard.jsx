@@ -148,7 +148,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Monthly Revenue</p>
-                  <p className="text-3xl font-bold text-yellow-400">Ksh {monthlyRevenue.toFixed(2)}</p>
+                  <p className="text-3xl font-bold text-yellow-400">KES {monthlyRevenue.toFixed(2)}</p>
                 </div>
                 <DollarSign size={32} className="text-yellow-400/60" />
               </div>
