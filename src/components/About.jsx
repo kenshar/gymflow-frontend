@@ -3,7 +3,7 @@ import { Dumbbell, Users, Clock, Award } from "lucide-react";
 const features = [
   {
     icon: Dumbbell,
-    title: "Premium Equipment",
+    title: "Diverse Group Class Equipment",
     description: "Top-of-the-line machines and free weights for every workout style."
   },
   {
