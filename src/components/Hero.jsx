@@ -14,8 +14,8 @@ const Hero = () => {
       {/* Fallback background for browsers that don't support video */}
       <div className="absolute inset-0 bg-gradient-to-br from-secondary via-background to-secondary" />
       
-      {/* Gradient overlay from left for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 via-40% to-transparent" />
+      {/* Enhanced gradient overlay - stronger on the left for better text readability */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 via-50% to-transparent" />
       
       {/* Content - Left aligned */}
       <div className="container mx-auto px-6 relative z-10 pt-32 pb-20">
