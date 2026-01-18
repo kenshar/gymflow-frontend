@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Plus, Trash2, ChevronDown, ChevronUp, Calendar } from "lucide-react";
+import { X, Plus, Trash2, ChevronDown, ChevronUp, Calendar, Edit } from "lucide-react";
 import { Button } from "./ui/button";
 
 const Login = ({ isOpen, onClose }) => {
@@ -12,11 +12,13 @@ const Login = ({ isOpen, onClose }) => {
     return savedMembers ? JSON.parse(savedMembers) : [];
   });
   const [expandedMember, setExpandedMember] = useState(null);
+  const [editingMemberId, setEditingMemberId] = useState(null);
   const [memberForm, setMemberForm] = useState({
     name: "",
     email: "",
     phone: "",
     membership: "Essential Fitness",
+    planType: "monthly",
     startDate: "",
     endDate: "",
     paymentAmount: "",
@@ -95,24 +97,41 @@ const Login = ({ isOpen, onClose }) => {
       return;
     }
 
-    const newMember = {
-      id: Date.now(),
-      ...memberForm,
-      paymentAmount: memberForm.paymentAmount || "0",
-      paymentDueDate: memberForm.paymentDueDate || "",
-      paymentStatus: "pending",
-      allocatedExercise: exerciseForm.exercise,
-      allocatedSets: exerciseForm.sets,
-      attendanceRecords: [],
-      recentWorkouts: [],
-    };
-
-    setMembers([...members, newMember]);
+    if (editingMemberId) {
+      // Update existing member
+      setMembers(members.map(member => 
+        member.id === editingMemberId
+          ? {
+              ...member,
+              ...memberForm,
+              allocatedExercise: exerciseForm.exercise,
+              allocatedSets: exerciseForm.sets,
+            }
+          : member
+      ));
+      setEditingMemberId(null);
+    } else {
+      // Create new member
+      const newMember = {
+        id: Date.now(),
+        ...memberForm,
+        paymentAmount: memberForm.paymentAmount || "0",
+        paymentDueDate: memberForm.paymentDueDate || "",
+        paymentStatus: "pending",
+        allocatedExercise: exerciseForm.exercise,
+        allocatedSets: exerciseForm.sets,
+        attendanceRecords: [],
+        recentWorkouts: [],
+      };
+      setMembers([...members, newMember]);
+    }
+    
     setMemberForm({
       name: "",
       email: "",
       phone: "",
       membership: "Essential Fitness",
+      planType: "monthly",
       startDate: "",
       endDate: "",
       paymentAmount: "",
@@ -126,6 +145,47 @@ const Login = ({ isOpen, onClose }) => {
 
   const handleDeleteMember = (id) => {
     setMembers(members.filter(member => member.id !== id));
+  };
+
+  const handleEditMember = (member) => {
+    setEditingMemberId(member.id);
+    setMemberForm({
+      name: member.name,
+      email: member.email,
+      phone: member.phone,
+      membership: member.membership,
+      planType: member.planType || "monthly",
+      startDate: member.startDate,
+      endDate: member.endDate,
+      paymentAmount: member.paymentAmount || "",
+      paymentDueDate: member.paymentDueDate || "",
+    });
+    setExerciseForm({
+      exercise: member.allocatedExercise,
+      sets: member.allocatedSets,
+    });
+    setExpandedMember(null);
+    // Scroll to form
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 100);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMemberId(null);
+    setMemberForm({
+      name: "",
+      email: "",
+      phone: "",
+      membership: "Essential Fitness",
+      planType: "monthly",
+      startDate: "",
+      endDate: "",
+      paymentAmount: "",
+      paymentDueDate: "",
+    });
+    setExerciseForm({
+      exercise: "",
+      sets: "",
+    });
   };
 
   const handleUpdatePaymentStatus = (id, status) => {
@@ -209,11 +269,11 @@ const Login = ({ isOpen, onClose }) => {
           </p>
 
           <div className="space-y-6">
-            {/* Add Member & Exercise Form */}
+            {/* Add/Edit Member & Exercise Form */}
             <div className="bg-slate-700/80 rounded-xl p-6 border border-border">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <Plus size={20} className="text-primary" />
-                Add New Member & Select Exercise
+                {editingMemberId ? "Edit Member & Exercise" : "Add New Member & Select Exercise"}
               </h3>
 
               <form onSubmit={handleAddMember} className="space-y-4">
@@ -261,6 +321,18 @@ const Login = ({ isOpen, onClose }) => {
                       <option value="Essential Fitness">Essential Fitness</option>
                       <option value="Diverse Group Class">Diverse Group Class</option>
                       <option value="Wellness % Recovery">Wellness % Recovery</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-foreground">Plan Type</label>
+                    <select
+                      value={memberForm.planType}
+                      onChange={(e) => setMemberForm({...memberForm, planType: e.target.value})}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                    >
+                      <option value="monthly">Monthly</option>
+                      <option value="annual">Annual</option>
                     </select>
                   </div>
 
@@ -342,8 +414,18 @@ const Login = ({ isOpen, onClose }) => {
                   type="submit"
                   className="w-full py-2 text-sm md:text-base font-semibold"
                 >
-                  Add Member & Exercise
+                  {editingMemberId ? "Update Member & Exercise" : "Add Member & Exercise"}
                 </Button>
+                {editingMemberId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                    className="w-full py-2 text-sm md:text-base font-semibold"
+                  >
+                    Cancel Edit
+                  </Button>
+                )}
               </form>
             </div>
 
@@ -415,8 +497,16 @@ const Login = ({ isOpen, onClose }) => {
                                 {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                               </button>
                               <button
+                                onClick={() => handleEditMember(member)}
+                                className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                title="Edit member"
+                              >
+                                <Edit size={18} />
+                              </button>
+                              <button
                                 onClick={() => handleDeleteMember(member.id)}
                                 className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                title="Delete member"
                               >
                                 <Trash2 size={18} />
                               </button>
@@ -431,6 +521,7 @@ const Login = ({ isOpen, onClose }) => {
                                 <p className="text-sm font-semibold mb-2">Membership Details</p>
                                 <div className="text-xs text-muted-foreground space-y-1">
                                   <p>Type: {member.membership}</p>
+                                  <p>Plan: <span className="font-medium text-foreground capitalize">{member.planType || "monthly"}</span></p>
                                   <p>Start: {member.startDate} | End: {member.endDate}</p>
                                   <p>Exercise: {member.allocatedExercise} - {member.allocatedSets}</p>
                                 </div>
