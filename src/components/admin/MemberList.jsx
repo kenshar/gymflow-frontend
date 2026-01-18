@@ -1,4 +1,5 @@
-import { Trash2, ChevronDown, ChevronUp, Edit, CheckCircle } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp, Edit, CheckCircle, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const MemberList = ({
   members,
@@ -14,6 +15,7 @@ const MemberList = ({
   getAttendanceFrequency,
   getActiveStatus
 }) => {
+  const navigate = useNavigate();
   return (
     <div className="bg-slate-700/80 rounded-xl p-8 border border-border">
       <h3 className="text-2xl font-semibold mb-6">
@@ -76,6 +78,13 @@ const MemberList = ({
 
                     <div className="flex gap-2 items-center">
                       <button
+                        onClick={() => navigate(`/admin/member/${member.id}`)}
+                        className="p-2 text-purple-500 hover:bg-purple-500/10 rounded-lg transition-colors"
+                        title="View member profile"
+                      >
+                        <User size={18} />
+                      </button>
+                      <button
                         onClick={() => setExpandedMember(isExpanded ? null : member.id)}
                         className="p-2 text-muted-foreground hover:text-foreground transition-colors"
                       >
@@ -118,7 +127,7 @@ const MemberList = ({
                         <div>
                           <p className="text-sm font-semibold mb-3">Payment Info</p>
                           <div className="flex gap-4 items-center text-sm flex-wrap">
-                            <span>Amount: Kshs {parseFloat(member.paymentAmount || 0).toFixed(2)}</span>
+                            <span>Amount: Ksh {parseFloat(member.paymentAmount || 0).toFixed(2)}</span>
                             <span>Due: {member.paymentDueDate}</span>
                             <select
                               value={member.paymentStatus}
