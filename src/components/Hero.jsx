@@ -21,10 +21,10 @@ const Hero = () => {
       <div className="container mx-auto px-6 relative z-10 pt-32 pb-20">
         <div className="max-w-2xl">
           <h2 className="font-display text-5xl md:text-7xl lg:text-8xl leading-tight mb-6 text-left">
-            TRANSFORM YOUR
+            <span className="text-blue-500">TRANSFORM YOUR</span>
             <span className="block gradient-text">BODY & MIND</span>
           </h2>
-          <p className="font-body text-lg md:text-xl text-muted-foreground max-w-xl mb-10 text-left">
+          <p className="font-body text-lg md:text-xl text-white max-w-xl mb-10 text-left">
             Join GymFlow and experience the ultimate fitness journey. 
             State-of-the-art equipment, expert trainers, and a community that motivates.
           </p>
