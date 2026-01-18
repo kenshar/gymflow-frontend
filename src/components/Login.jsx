@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Login = ({ isOpen, onClose }) => {
   const [username, setUsername] = useState("");
@@ -199,10 +200,10 @@ const Login = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-md bg-card rounded-2xl shadow-2xl p-6 md:p-8 border border-border animate-in fade-in zoom-in duration-300">
+      <div className="relative w-full max-w-md bg-slate-800/95 rounded-2xl shadow-2xl p-8 border border-slate-700 animate-in fade-in zoom-in duration-300">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-200 transition-colors"
         >
           <X size={24} />
         </button>
@@ -233,7 +234,7 @@ const Login = ({ isOpen, onClose }) => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm md:text-base"
+              className="w-full px-4 py-3 rounded-lg bg-slate-700 text-white border border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/50 outline-none transition-all text-sm placeholder:text-slate-500"
               placeholder="••••••••"
               required
             />
@@ -247,7 +248,7 @@ const Login = ({ isOpen, onClose }) => {
 
           <Button
             type="submit"
-            className="w-full py-3 text-sm md:text-base font-semibold"
+            className="w-full py-3 text-base font-semibold"
           >
             Admin Login
           </Button>

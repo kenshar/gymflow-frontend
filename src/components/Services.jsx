@@ -33,7 +33,7 @@ const services = [
   },
   {
     name: "Wellness % Recovery",
-    price: "9,000",
+    price: "Ksh 9,000",
     period: "/month",
     features: [
       "Spa Services",
