@@ -508,7 +508,8 @@ const AdminDashboard = ({ isOpen, onClose }) => {
                               <div>
                                 <p className="text-sm font-semibold mb-2">Payment Info</p>
                                 <div className="flex gap-2 items-center text-xs">
-                                  <span>Amount: ${parseFloat(member.paymentAmount || 0).toFixed(2)}</span>
+                                  <span>Amount: Ksh
+                                     {parseFloat(member.paymentAmount || 0).toFixed(2)}</span>
                                   <span>Due: {member.paymentDueDate}</span>
                                   <select
                                     value={member.paymentStatus}
