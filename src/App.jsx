@@ -12,7 +12,7 @@ import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
-    <Router>
+    <Router basename="/gymflow-frontend">
       <Routes>
         {/* Home Page */}
         <Route
