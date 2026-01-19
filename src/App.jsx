@@ -1,4 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./lib/firebase";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import About from "./components/About";
@@ -10,14 +13,28 @@ import LoginPage from "./pages/LoginPage";
 import WorkoutLogging from "./pages/WorkoutLogging";
 import MemberProfile from "./pages/MemberProfile";
 import Dashboard from "./pages/Dashboard";
-import { isAuthenticated } from "./lib/api";
 
 // Protected Route component
-const ProtectedRoute = ({ children }) => {
-  return isAuthenticated() ? children : <Navigate to="/login" replace />;
+const ProtectedRoute = ({ children, user, loading }) => {
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+  return user ? children : <Navigate to="/login" replace />;
 };
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
   return (
     <Router>
       <Routes>
@@ -42,10 +59,10 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
 
         {/* Protected Admin Routes */}
-        <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
-        <Route path="/admin/workout-logging" element={<ProtectedRoute><WorkoutLogging /></ProtectedRoute>} />
-        <Route path="/admin/member/:id" element={<ProtectedRoute><MemberProfile /></ProtectedRoute>} />
-        <Route path="/admin/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute user={user} loading={loading}><AdminPage /></ProtectedRoute>} />
+        <Route path="/admin/workout-logging" element={<ProtectedRoute user={user} loading={loading}><WorkoutLogging /></ProtectedRoute>} />
+        <Route path="/admin/member/:id" element={<ProtectedRoute user={user} loading={loading}><MemberProfile /></ProtectedRoute>} />
+        <Route path="/admin/dashboard" element={<ProtectedRoute user={user} loading={loading}><Dashboard /></ProtectedRoute>} />
       </Routes>
     </Router>
   );
