@@ -1,13 +1,15 @@
 # GymFlow Frontend
 
-<<<<<<< HEAD
 GymFlow Frontend is a modern web application designed to streamline gym management for both members and administrators. Built with React, Vite, and Tailwind CSS, it offers a fast, responsive, and user-friendly experience.
 
 ---
+[Live link](https://kenshar.github.io/gymflow-frontend/)
+
+[Backend Repo Link](https://github.com/kenshar/gymflow-backtend)
+
 
 ## Table of Contents
 - [Features](#features)
-- [Screenshots](#screenshots)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
 - [Available Scripts](#available-scripts)
@@ -33,49 +35,6 @@ GymFlow Frontend is designed to provide a seamless experience for both gym membe
 - **Intuitive Navigation:** Features like breadcrumb navigation and reusable UI components make it easy for users to find what they need and for developers to maintain and extend the app.
 
 ---
-
-eslint.config.js
-index.html
-package.json
-postcss.config.js
-README.md
-tailwind.config.js
-vite.config.js
-public/
-  videos/
-src/
-  App.css
-  App.jsx
-  index.css
-  main.jsx
-  assets/
-  components/
-    About.jsx
-    AdminDashboard.jsx
-    BreadcrumbNavigation.jsx
-    Footer.jsx
-    Header.jsx
-    Hero.jsx
-    Login.jsx
-    MemberFormModal.jsx
-    Services.jsx
-    Upcoming.jsx
-    admin/
-      AdminHeader.jsx
-      CheckInSection.jsx
-      CheckInsList.jsx
-      MemberForm.jsx
-      MemberList.jsx
-      TabNavigation.jsx
-    ui/
-      button.jsx
-  lib/
-    utils.js
-  pages/
-    AdminPage.jsx
-    Dashboard.jsx
-    MemberProfile.jsx
-    WorkoutLogging.jsx
 
 ## Project Structure
 
@@ -120,23 +79,6 @@ git clone https://github.com/kenshar/gymflow-frontend.git
 cd gymflow-frontend
 npm install
 ```
-
-### Running the App
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173) in your browser to view the app.
-
----
-
-## Available Scripts
-- `npm run dev` — Start development server
-- `npm run build` — Build for production
-- `npm run preview` — Preview production build
-- `npm run lint` — Run ESLint for code quality
-
 ---
 
 ## Technologies Used
@@ -166,15 +108,46 @@ Contributions are welcome! Please follow these steps:
 4. Push to your branch
 5. Open a pull request
 
+---
+
+
+## Development Notes
+
+- **State Management**: Currently uses React's built-in state management with localStorage persistence
+- **Data Flow**: Props-based data flow with callback functions
+- **Styling Approach**: Utility-first CSS with Tailwind classes
+- **Component Architecture**: Modular component structure with separation of concerns
+
+---
+
+## Support
+
+For support and questions:
+- Create an issue in the repository
+- Contact the development team
+- Check the backend documentation for API-related queries
+
+---
+
+## Authors
+
+1. Kennedy Ng'ang'a (kenshar)
+2. Branice Simaloi (simaloibranice-boop)
+3. Allan Ratemo (pyrxallan)
+4. Linda Jerop (Linda-Jerop)
+5. Derrick Koome (Derrickkoome)
 
 ---
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
-=======
+
+
+---
+
 A modern, responsive React application for gym management, built with cutting-edge technologies to provide an intuitive and efficient experience for both gym administrators and members.
 
 ##  About GymFlow
@@ -387,4 +360,3 @@ For support and questions:
 ---
 
 **Built with ❤️ for fitness enthusiasts and gym operators**
->>>>>>> 8e0d019 (Updated README.md to describe GymFlow frontend application features, tech stack, and usage)
