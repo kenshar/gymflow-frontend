@@ -19,7 +19,7 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   return (
-    <Router basename="/gymflow-frontend">
+    <Router>
       <Routes>
         {/* Home Page */}
         <Route
