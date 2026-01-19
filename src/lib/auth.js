@@ -1,4 +1,6 @@
 // Lightweight local auth stub to replace Firebase for frontend-only deployments
+import { setAuthToken, removeAuthToken } from './api';
+
 let currentUser = null;
 const subscribers = new Set();
 
@@ -17,14 +19,16 @@ export async function signIn(email, password) {
     throw err;
   }
 
-  // Create a simple user object and notify subscribers
+  // Create a simple user object and set auth token
   currentUser = { uid: 'local-' + Date.now(), email };
+  setAuthToken('demo-token-' + currentUser.uid);
   subscribers.forEach((cb) => cb(currentUser));
   return currentUser;
 }
 
 export async function signOut() {
   currentUser = null;
+  removeAuthToken();
   subscribers.forEach((cb) => cb(null));
 }
 
