@@ -8,14 +8,14 @@ const Hero = () => {
         muted 
         className="absolute inset-0 w-full h-full object-cover"
       >
-        <source src="/videos/gym-background.mp4" type="video/mp4" />
+        <source src="videos/gym-background.mp4" type="video/mp4" />
       </video>
       
       {/* Fallback background for browsers that don't support video */}
       <div className="absolute inset-0 bg-gradient-to-br from-secondary via-background to-secondary" />
       
       {/* Gradient overlay from left for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 via-40% to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 via-100% to-transparent" />
       
       {/* Content - Left aligned */}
       <div className="container mx-auto px-6 relative z-10 pt-32 pb-20">

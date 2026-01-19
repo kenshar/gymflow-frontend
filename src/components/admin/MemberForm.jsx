@@ -9,7 +9,8 @@ const MemberForm = ({
   exercises,
   editingMemberId,
   handleAddMember,
-  handleCancelEdit
+  handleCancelEdit,
+  membershipPlans = []
 }) => {
   return (
     <div className="bg-slate-700/80 rounded-xl p-8 border border-border">
@@ -60,9 +61,12 @@ const MemberForm = ({
               onChange={(e) => setMemberForm({...memberForm, membership: e.target.value})}
               className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
             >
-              <option value="Essential Fitness">Essential Fitness</option>
-              <option value="Diverse Group Class">Diverse Group Class</option>
-              <option value="Wellness % Recovery">Wellness % Recovery</option>
+              <option value="">Select Membership Plan</option>
+              {membershipPlans.map(plan => (
+                <option key={plan.id} value={plan.name}>
+                  {plan.name} (${plan.price}/month)
+                </option>
+              ))}
             </select>
           </div>
 
