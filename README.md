@@ -131,11 +131,11 @@ For support and questions:
 
 ## Authors
 
-Kennedy Ng'ang'a (kenshar)
-Branice Simaloi (simaloibranice-boop)
-Allan Ratemo (pyrxallan)
-Linda Jerop (Linda-Jerop)
-Derrick Koome (Derrickkoome)
+1. Kennedy Ng'ang'a (kenshar)
+2. Branice Simaloi (simaloibranice-boop)
+3. Allan Ratemo (pyrxallan)
+4. Linda Jerop (Linda-Jerop)
+5. Derrick Koome (Derrickkoome)
 
 ---
 
