@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../lib/firebase";
+import { signIn } from "../lib/auth";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -18,7 +17,7 @@ const LoginPage = () => {
 
     try {
       console.log('Attempting login with:', credentials.email);
-      await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+      await signIn(credentials.email, credentials.password);
       toast.success("Login successful!");
       console.log('Navigating to /admin');
       navigate("/admin");
