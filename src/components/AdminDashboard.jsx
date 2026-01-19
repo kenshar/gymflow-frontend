@@ -1,65 +1,89 @@
 import { useState, useEffect } from "react";
-import { X, Plus, Trash2, ChevronDown, ChevronUp, Edit } from "lucide-react";
+import { X, Plus, Trash2, ChevronDown, ChevronUp, Edit, Users, Activity, Calendar, TrendingUp } from "lucide-react";
 import { Button } from "./ui/button";
 
 const AdminDashboard = ({ isOpen, onClose }) => {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
   const [members, setMembers] = useState(() => {
     const savedMembers = localStorage.getItem("gymMembers");
     return savedMembers ? JSON.parse(savedMembers) : [];
   });
   const [expandedMember, setExpandedMember] = useState(null);
   const [editingMemberId, setEditingMemberId] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [memberForm, setMemberForm] = useState({
     name: "",
     email: "",
     phone: "",
     membership: "Essential Fitness",
     planType: "monthly",
-    startDate: "",
+    startDate: new Date().toISOString().split('T')[0],
     endDate: "",
     paymentAmount: "",
     paymentDueDate: "",
   });
+
   const [exercises] = useState([
-    {
-      id: 1,
-      name: "Bench Press",
-      repRanges: ["1-5", "1-10", "1-15"],
-    },
-    {
-      id: 2,
-      name: "Kegel",
-      repRanges: ["1-5", "1-10", "1-15"],
-    },
-    {
-      id: 3,
-      name: "Squats",
-      repRanges: ["1-5", "1-10", "1-15"],
-    },
-    {
-      id: 4,
-      name: "Burpees",
-      repRanges: ["1-5", "1-10", "1-15"],
-    },
+    { id: 1, name: "Bench Press", repRanges: ["1-5", "1-10", "1-15"] },
+    { id: 2, name: "Kegel", repRanges: ["1-5", "1-10", "1-15"] },
+    { id: 3, name: "Squats", repRanges: ["1-5", "1-10", "1-15"] },
+    { id: 4, name: "Burpees", repRanges: ["1-5", "1-10", "1-15"] },
   ]);
+
   const [exerciseForm, setExerciseForm] = useState({
     exercise: "",
     sets: "",
   });
+
+  const membershipPlans = [
+    { id: 1, name: "Essential Fitness", price: 2500 },
+    { id: 2, name: "Diverse Group Class", price: 3500 },
+    { id: 3, name: "Wellness & Recovery", price: 4500 },
+  ];
 
   // Save members to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("gymMembers", JSON.stringify(members));
   }, [members]);
 
+  // Auto-calculate end date based on plan type
+  useEffect(() => {
+    if (memberForm.startDate && memberForm.planType) {
+      const startDate = new Date(memberForm.startDate);
+      const endDate = new Date(startDate);
+
+      if (memberForm.planType === "monthly") {
+        endDate.setMonth(endDate.getMonth() + 1);
+      } else if (memberForm.planType === "annual") {
+        endDate.setFullYear(endDate.getFullYear() + 1);
+      }
+
+      setMemberForm(prev => ({
+        ...prev,
+        endDate: endDate.toISOString().split('T')[0]
+      }));
+    }
+  }, [memberForm.startDate, memberForm.planType]);
+
+  // Auto-set payment amount based on membership plan
+  useEffect(() => {
+    const plan = membershipPlans.find(p => p.name === memberForm.membership);
+    if (plan) {
+      const amount = memberForm.planType === "annual" ? plan.price * 12 : plan.price;
+      setMemberForm(prev => ({
+        ...prev,
+        paymentAmount: amount.toString()
+      }));
+    }
+  }, [memberForm.membership, memberForm.planType]);
+
   if (!isOpen) return null;
 
-  // Helper function to check if membership is expired
   const isMembershipExpired = (endDate) => {
     return new Date(endDate) < new Date();
   };
 
-  // Helper function to check if payment is overdue
   const isPaymentOverdue = (dueDate, paymentStatus) => {
     return paymentStatus !== "paid" && new Date(dueDate) < new Date();
   };
@@ -68,7 +92,7 @@ const AdminDashboard = ({ isOpen, onClose }) => {
     e.preventDefault();
 
     if (!memberForm.name || !memberForm.email || !memberForm.phone || !memberForm.startDate || !memberForm.endDate) {
-      alert("Please fill in all fields including membership dates");
+      alert("Please fill in all required fields");
       return;
     }
 
@@ -76,6 +100,8 @@ const AdminDashboard = ({ isOpen, onClose }) => {
       alert("Please select an exercise and sets");
       return;
     }
+
+    setLoading(true);
 
     try {
       if (editingMemberId) {
@@ -93,7 +119,6 @@ const AdminDashboard = ({ isOpen, onClose }) => {
         setEditingMemberId(null);
       } else {
         // Create new member - save to backend
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
         const response = await fetch(`${API_URL}/api/admin/members/create`, {
           method: 'POST',
           headers: {
@@ -119,7 +144,7 @@ const AdminDashboard = ({ isOpen, onClose }) => {
         const data = await response.json();
 
         // Show success message with credentials
-        alert(`Member created successfully!\n\nUsername: ${data.member.username}\nPassword: ${data.default_password}\n\nPlease save these credentials!`);
+        alert(`✅ Member created successfully!\n\n👤 Username: ${data.member.username}\n🔑 Password: ${data.default_password}\n\n⚠️ Please save these credentials!`);
 
         // Add to local state with allocated exercise info
         const newMember = {
@@ -149,7 +174,7 @@ const AdminDashboard = ({ isOpen, onClose }) => {
         phone: "",
         membership: "Essential Fitness",
         planType: "monthly",
-        startDate: "",
+        startDate: new Date().toISOString().split('T')[0],
         endDate: "",
         paymentAmount: "",
         paymentDueDate: "",
@@ -160,12 +185,16 @@ const AdminDashboard = ({ isOpen, onClose }) => {
       });
     } catch (error) {
       console.error('Error creating member:', error);
-      alert(`Error: ${error.message}`);
+      alert(`❌ Error: ${error.message}\n\nMake sure the backend server is running!`);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteMember = (id) => {
-    setMembers(members.filter(member => member.id !== id));
+    if (confirm("Are you sure you want to delete this member?")) {
+      setMembers(members.filter(member => member.id !== id));
+    }
   };
 
   const handleEditMember = (member) => {
@@ -186,8 +215,7 @@ const AdminDashboard = ({ isOpen, onClose }) => {
       sets: member.allocatedSets,
     });
     setExpandedMember(null);
-    // Scroll to form
-    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 100);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleCancelEdit = () => {
@@ -198,7 +226,7 @@ const AdminDashboard = ({ isOpen, onClose }) => {
       phone: "",
       membership: "Essential Fitness",
       planType: "monthly",
-      startDate: "",
+      startDate: new Date().toISOString().split('T')[0],
       endDate: "",
       paymentAmount: "",
       paymentDueDate: "",
@@ -210,34 +238,32 @@ const AdminDashboard = ({ isOpen, onClose }) => {
   };
 
   const handleUpdatePaymentStatus = (id, status) => {
-    setMembers(members.map(member => 
+    setMembers(members.map(member =>
       member.id === id ? {...member, paymentStatus: status} : member
     ));
   };
 
-  // Add attendance record
   const handleAddAttendance = (memberId) => {
     const today = new Date().toISOString().split('T')[0];
-    setMembers(members.map(member => 
-      member.id === memberId 
+    setMembers(members.map(member =>
+      member.id === memberId
         ? {
-            ...member, 
+            ...member,
             attendanceRecords: [
               ...(member.attendanceRecords || []),
               { date: today, id: Date.now() }
             ]
-          } 
+          }
         : member
     ));
   };
 
-  // Add workout record
   const handleAddWorkout = (memberId, exerciseName, duration) => {
     const today = new Date().toISOString().split('T')[0];
-    setMembers(members.map(member => 
-      member.id === memberId 
+    setMembers(members.map(member =>
+      member.id === memberId
         ? {
-            ...member, 
+            ...member,
             recentWorkouts: [
               {
                 id: Date.now(),
@@ -247,20 +273,17 @@ const AdminDashboard = ({ isOpen, onClose }) => {
               },
               ...(member.recentWorkouts || []).slice(0, 4)
             ]
-          } 
+          }
         : member
     ));
   };
 
-  // Calculate attendance frequency (workouts in last 30 days)
   const getAttendanceFrequency = (records = []) => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
     return records.filter(record => new Date(record.date) >= thirtyDaysAgo).length;
   };
 
-  // Get active status (whether membership is active and not expired)
   const getActiveStatus = (member) => {
     const expired = isMembershipExpired(member.endDate);
     const today = new Date().toISOString().split('T')[0];
@@ -268,140 +291,204 @@ const AdminDashboard = ({ isOpen, onClose }) => {
     return hasStarted && !expired ? "Active" : "Inactive";
   };
 
+  // Calculate stats
+  const activeMembers = members.filter(m => getActiveStatus(m) === "Active").length;
+  const todayCheckIns = members.filter(m => {
+    const today = new Date().toISOString().split('T')[0];
+    return m.attendanceRecords?.some(r => r.date === today);
+  }).length;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-2xl bg-card rounded-2xl shadow-2xl p-6 md:p-8 border border-border animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <X size={24} />
-        </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="relative w-full max-w-7xl bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-primary/20 animate-in fade-in zoom-in duration-300 max-h-[95vh] overflow-hidden flex flex-col">
 
-        <h2 className="text-2xl md:text-3xl font-display mb-2 gradient-text">
-          Admin Dashboard
-        </h2>
-        <p className="text-muted-foreground mb-6 text-sm md:text-base">
-          Welcome Admin! Manage gym members here.
-        </p>
+        {/* Header with Stats */}
+        <div className="bg-gradient-to-r from-primary/20 to-blue-500/20 border-b border-primary/30 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-3xl font-display gradient-text">Admin Dashboard</h2>
+              <p className="text-muted-foreground text-sm mt-1">Manage gym members and operations</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-white/10 rounded-lg"
+            >
+              <X size={24} />
+            </button>
+          </div>
 
-        <div className="space-y-6">
-          {/* Add/Edit Member & Exercise Form */}
-          <div className="bg-slate-700/80 rounded-xl p-6 border border-border">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          {/* Quick Stats */}
+          <div className="grid grid-cols-4 gap-4 mt-4">
+            <div className="bg-slate-800/50 rounded-lg p-3 border border-border">
+              <div className="flex items-center gap-2 mb-1">
+                <Users size={16} className="text-primary" />
+                <span className="text-xs text-muted-foreground">Total Members</span>
+              </div>
+              <p className="text-2xl font-bold text-primary">{members.length}</p>
+            </div>
+            <div className="bg-slate-800/50 rounded-lg p-3 border border-border">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp size={16} className="text-green-400" />
+                <span className="text-xs text-muted-foreground">Active</span>
+              </div>
+              <p className="text-2xl font-bold text-green-400">{activeMembers}</p>
+            </div>
+            <div className="bg-slate-800/50 rounded-lg p-3 border border-border">
+              <div className="flex items-center gap-2 mb-1">
+                <Activity size={16} className="text-blue-400" />
+                <span className="text-xs text-muted-foreground">Today's Check-ins</span>
+              </div>
+              <p className="text-2xl font-bold text-blue-400">{todayCheckIns}</p>
+            </div>
+            <div className="bg-slate-800/50 rounded-lg p-3 border border-border">
+              <div className="flex items-center gap-2 mb-1">
+                <Calendar size={16} className="text-yellow-400" />
+                <span className="text-xs text-muted-foreground">This Month</span>
+              </div>
+              <p className="text-2xl font-bold text-yellow-400">{members.length}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+          {/* Add/Edit Member Form */}
+          <div className="bg-slate-800/60 rounded-xl p-6 border border-primary/20">
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Plus size={20} className="text-primary" />
               {editingMemberId ? "Edit Member & Exercise" : "Add New Member & Select Exercise"}
             </h3>
 
-            <form onSubmit={handleAddMember} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleAddMember} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                {/* Name */}
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Name</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">Full Name *</label>
                   <input
                     type="text"
+                    required
                     value={memberForm.name}
                     onChange={(e) => setMemberForm({...memberForm, name: e.target.value})}
-                    className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm placeholder:text-muted-foreground"
-                    placeholder="Member name"
+                    className="w-full px-4 py-3 rounded-lg bg-slate-700/50 text-foreground border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    placeholder="John Doe"
                   />
                 </div>
 
+                {/* Email */}
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Email</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">Email Address *</label>
                   <input
                     type="email"
+                    required
                     value={memberForm.email}
                     onChange={(e) => setMemberForm({...memberForm, email: e.target.value})}
-                    className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm placeholder:text-muted-foreground"
+                    className="w-full px-4 py-3 rounded-lg bg-slate-700/50 text-foreground border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="member@example.com"
                   />
                 </div>
 
+                {/* Phone */}
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Phone</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">Phone Number *</label>
                   <input
                     type="tel"
+                    required
                     value={memberForm.phone}
                     onChange={(e) => setMemberForm({...memberForm, phone: e.target.value})}
-                    className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm placeholder:text-muted-foreground"
-                    placeholder="+254 () 123-4567"
+                    className="w-full px-4 py-3 rounded-lg bg-slate-700/50 text-foreground border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    placeholder="+254 712 345678"
                   />
                 </div>
 
+                {/* Membership Plan */}
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Membership Type</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">Membership Plan *</label>
                   <select
+                    required
                     value={memberForm.membership}
                     onChange={(e) => setMemberForm({...memberForm, membership: e.target.value})}
-                    className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                    className="w-full px-4 py-3 rounded-lg bg-slate-700/50 text-foreground border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                   >
-                    <option value="Essential Fitness">Essential Fitness</option>
-                    <option value="Diverse Group Class">Diverse Group Class</option>
-                    <option value="Wellness % Recovery">Wellness % Recovery</option>
+                    {membershipPlans.map(plan => (
+                      <option key={plan.id} value={plan.name}>
+                        {plan.name} (KES {plan.price}/month)
+                      </option>
+                    ))}
                   </select>
                 </div>
 
+                {/* Plan Duration */}
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Plan Type</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">Plan Duration *</label>
                   <select
+                    required
                     value={memberForm.planType}
                     onChange={(e) => setMemberForm({...memberForm, planType: e.target.value})}
-                    className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                    className="w-full px-4 py-3 rounded-lg bg-slate-700/50 text-foreground border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                   >
                     <option value="monthly">Monthly</option>
-                    <option value="annual">Annual</option>
+                    <option value="annual">Annual (Save 10%)</option>
                   </select>
                 </div>
 
+                {/* Start Date */}
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Membership Start Date</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">Start Date *</label>
                   <input
                     type="date"
+                    required
                     value={memberForm.startDate}
                     onChange={(e) => setMemberForm({...memberForm, startDate: e.target.value})}
-                    className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                    className="w-full px-4 py-3 rounded-lg bg-slate-700/50 text-foreground border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                   />
                 </div>
 
+                {/* End Date (Auto-calculated) */}
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Membership End Date</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">End Date (Auto)</label>
                   <input
                     type="date"
                     value={memberForm.endDate}
-                    onChange={(e) => setMemberForm({...memberForm, endDate: e.target.value})}
-                    className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                    readOnly
+                    className="w-full px-4 py-3 rounded-lg bg-slate-700/30 text-muted-foreground border border-border outline-none"
                   />
                 </div>
 
+                {/* Payment Amount (Auto-calculated) */}
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Payment Amount</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">Payment Amount (KES)</label>
                   <input
                     type="number"
                     value={memberForm.paymentAmount}
                     onChange={(e) => setMemberForm({...memberForm, paymentAmount: e.target.value})}
-                    className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                    className="w-full px-4 py-3 rounded-lg bg-slate-700/50 text-foreground border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="0.00"
                     min="0"
                     step="0.01"
                   />
                 </div>
 
+                {/* Payment Due Date */}
                 <div>
                   <label className="block text-sm font-medium mb-2 text-foreground">Payment Due Date</label>
                   <input
                     type="date"
                     value={memberForm.paymentDueDate}
                     onChange={(e) => setMemberForm({...memberForm, paymentDueDate: e.target.value})}
-                    className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                    className="w-full px-4 py-3 rounded-lg bg-slate-700/50 text-foreground border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                   />
                 </div>
 
+                {/* Exercise Selection */}
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Exercise</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">Assigned Exercise *</label>
                   <select
+                    required
                     value={exerciseForm.exercise}
                     onChange={(e) => setExerciseForm({...exerciseForm, exercise: e.target.value})}
-                    className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                    className="w-full px-4 py-3 rounded-lg bg-slate-700/50 text-foreground border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                   >
                     <option value="">Select an exercise</option>
                     {exercises.map((exercise) => (
@@ -412,12 +499,14 @@ const AdminDashboard = ({ isOpen, onClose }) => {
                   </select>
                 </div>
 
+                {/* Sets/Reps */}
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-foreground">Sets</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">Sets/Reps *</label>
                   <select
+                    required
                     value={exerciseForm.sets}
                     onChange={(e) => setExerciseForm({...exerciseForm, sets: e.target.value})}
-                    className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                    className="w-full px-4 py-3 rounded-lg bg-slate-700/50 text-foreground border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                   >
                     <option value="">Select sets</option>
                     <option value="1-5">1-5 reps</option>
@@ -427,35 +516,42 @@ const AdminDashboard = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              <Button
-                type="submit"
-                className="w-full py-2 text-sm md:text-base font-semibold"
-              >
-                {editingMemberId ? "Update Member & Exercise" : "Add Member & Exercise"}
-              </Button>
-              {editingMemberId && (
+              <div className="flex gap-3">
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancelEdit}
-                  className="w-full py-2 text-sm md:text-base font-semibold"
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 py-3 text-base font-semibold bg-primary hover:bg-primary/90"
                 >
-                  Cancel Edit
+                  {loading ? "Saving..." : editingMemberId ? "Update Member" : "Add Member"}
                 </Button>
-              )}
+                {editingMemberId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                    className="flex-1 py-3 text-base font-semibold"
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
             </form>
           </div>
 
           {/* Members List */}
-          <div className="bg-slate-700/80 rounded-xl p-6 border border-border">
-            <h3 className="text-lg font-semibold mb-4">
+          <div className="bg-slate-800/60 rounded-xl p-6 border border-primary/20">
+            <h3 className="text-xl font-semibold mb-4">
               Members ({members.length})
             </h3>
 
             {members.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No members added yet.</p>
+              <div className="text-center py-12">
+                <Users size={48} className="text-muted-foreground mx-auto mb-3 opacity-50" />
+                <p className="text-muted-foreground">No members added yet</p>
+                <p className="text-sm text-muted-foreground mt-1">Add your first member using the form above</p>
+              </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                 {members.map((member) => {
                   const expired = isMembershipExpired(member.endDate);
                   const overdue = isPaymentOverdue(member.paymentDueDate, member.paymentStatus);
@@ -469,17 +565,17 @@ const AdminDashboard = ({ isOpen, onClose }) => {
                       className={`rounded-lg border transition-all ${
                         expired || overdue
                           ? "bg-red-500/10 border-red-500/30"
-                          : "bg-slate-600/50 border-border"
+                          : "bg-slate-700/40 border-border hover:border-primary/30"
                       }`}
                     >
                       <div className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <p className="font-medium text-sm">{member.name}</p>
+                              <p className="font-medium">{member.name}</p>
                               <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${
-                                activeStatus === "Active" 
-                                  ? "bg-green-500/20 text-green-400" 
+                                activeStatus === "Active"
+                                  ? "bg-green-500/20 text-green-400"
                                   : "bg-gray-500/20 text-gray-400"
                               }`}>
                                 {activeStatus}
@@ -495,130 +591,76 @@ const AdminDashboard = ({ isOpen, onClose }) => {
                                 </span>
                               )}
                             </div>
-
-                            {/* Summary Row */}
-                            <div className="flex gap-4 text-xs text-muted-foreground mb-2 flex-wrap">
-                              <span>📊 Attendance: {attendanceFrequency} visits (last 30 days)</span>
-                              <span>💪 Latest Workout: {member.recentWorkouts?.[0]?.date || "N/A"}</span>
+                            <div className="flex gap-4 text-xs text-muted-foreground">
+                              <span>📧 {member.email}</span>
+                              <span>📱 {member.phone}</span>
+                              <span>💪 {attendanceFrequency} visits/month</span>
                             </div>
-
-                            <p className="text-xs text-muted-foreground">{member.email}</p>
-                            <p className="text-xs text-muted-foreground">{member.phone}</p>
                           </div>
-
                           <div className="flex gap-2 items-center">
                             <button
                               onClick={() => setExpandedMember(isExpanded ? null : member.id)}
-                              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                              className="p-2 text-muted-foreground hover:text-foreground transition-colors hover:bg-white/5 rounded-lg"
                             >
                               {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                             </button>
                             <button
                               onClick={() => handleEditMember(member)}
-                              className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
-                              title="Edit member"
+                              className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
                             >
                               <Edit size={18} />
                             </button>
                             <button
                               onClick={() => handleDeleteMember(member.id)}
-                              className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                              title="Delete member"
+                              className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                             >
                               <Trash2 size={18} />
                             </button>
                           </div>
                         </div>
 
-                        {/* Expanded Details */}
                         {isExpanded && (
-                          <div className="mt-4 pt-4 border-t border-border space-y-4">
-                            {/* Basic Info */}
-                            <div>
-                              <p className="text-sm font-semibold mb-2">Membership Details</p>
-                              <div className="text-xs text-muted-foreground space-y-1">
-                                <p>Type: {member.membership}</p>
-                                <p>Plan: <span className="font-medium text-foreground capitalize">{member.planType || "monthly"}</span></p>
-                                <p>Start: {member.startDate} | End: {member.endDate}</p>
-                                <p>Exercise: {member.allocatedExercise} - {member.allocatedSets}</p>
+                          <div className="mt-4 pt-4 border-t border-border space-y-3">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <p className="text-muted-foreground">Membership</p>
+                                <p className="font-medium">{member.membership}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Duration</p>
+                                <p className="font-medium capitalize">{member.planType}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Start - End</p>
+                                <p className="font-medium">{member.startDate} → {member.endDate}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Exercise</p>
+                                <p className="font-medium">{member.allocatedExercise} ({member.allocatedSets})</p>
                               </div>
                             </div>
-
-                            {/* Payment Info */}
                             {member.paymentDueDate && (
-                              <div>
-                                <p className="text-sm font-semibold mb-2">Payment Info</p>
-                                <div className="flex gap-2 items-center text-xs">
-                                  <span>Amount: Ksh
-                                     {parseFloat(member.paymentAmount || 0).toFixed(2)}</span>
-                                  <span>Due: {member.paymentDueDate}</span>
-                                  <select
-                                    value={member.paymentStatus}
-                                    onChange={(e) => handleUpdatePaymentStatus(member.id, e.target.value)}
-                                    className={`px-2 py-1 rounded text-xs font-medium cursor-pointer ${
-                                      member.paymentStatus === "paid"
-                                        ? "bg-green-500/20 text-green-400 border border-green-500/50"
-                                        : "bg-orange-500/20 text-orange-400 border border-orange-500/50"
-                                    }`}
-                                  >
-                                    <option value="pending">Pending</option>
-                                    <option value="paid">Paid</option>
-                                  </select>
+                              <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                                <div>
+                                  <p className="text-sm font-medium">Payment</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    KES {parseFloat(member.paymentAmount || 0).toFixed(2)} • Due: {member.paymentDueDate}
+                                  </p>
                                 </div>
+                                <select
+                                  value={member.paymentStatus}
+                                  onChange={(e) => handleUpdatePaymentStatus(member.id, e.target.value)}
+                                  className={`px-3 py-1 rounded text-xs font-medium ${
+                                    member.paymentStatus === "paid"
+                                      ? "bg-green-500/20 text-green-400 border border-green-500/50"
+                                      : "bg-orange-500/20 text-orange-400 border border-orange-500/50"
+                                  }`}
+                                >
+                                  <option value="pending">Pending</option>
+                                  <option value="paid">Paid</option>
+                                </select>
                               </div>
                             )}
-
-                            {/* Attendance Summary */}
-                            <div>
-                              <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-semibold">Attendance Summary</p>
-                                <button
-                                  onClick={() => handleAddAttendance(member.id)}
-                                  className="px-2 py-1 text-xs bg-primary/20 text-primary rounded hover:bg-primary/30 transition-colors"
-                                >
-                                  + Log Visit
-                                </button>
-                              </div>
-                              <p className="text-xs text-muted-foreground mb-2">
-                                Total: {attendanceFrequency} visits (last 30 days)
-                              </p>
-                              {member.attendanceRecords && member.attendanceRecords.length > 0 && (
-                                <div className="text-xs text-muted-foreground space-y-1 max-h-20 overflow-y-auto">
-                                  <p>Recent visits:</p>
-                                  {member.attendanceRecords.slice(-5).reverse().map((record) => (
-                                    <div key={record.id} className="text-xs">✓ {record.date}</div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Recent Workouts */}
-                            <div>
-                              <p className="text-sm font-semibold mb-2">Recent Workouts</p>
-                              {member.recentWorkouts && member.recentWorkouts.length > 0 ? (
-                                <div className="space-y-2">
-                                  {member.recentWorkouts.map((workout) => (
-                                    <div key={workout.id} className="text-xs bg-slate-700/50 p-2 rounded">
-                                      <p className="font-medium">{workout.exercise}</p>
-                                      <p className="text-muted-foreground">
-                                        {workout.date} {workout.duration ? `• ${workout.duration} min` : ""}
-                                      </p>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <p className="text-xs text-muted-foreground">No workouts logged yet</p>
-                              )}
-                              <button
-                                onClick={() => {
-                                  const duration = prompt("Duration (minutes):", "30");
-                                  if (duration) handleAddWorkout(member.id, member.allocatedExercise, duration);
-                                }}
-                                className="mt-2 px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 transition-colors"
-                              >
-                                + Log Workout
-                              </button>
-                            </div>
                           </div>
                         )}
                       </div>
@@ -629,9 +671,13 @@ const AdminDashboard = ({ isOpen, onClose }) => {
             )}
           </div>
 
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-border p-4 bg-slate-900/50">
           <Button
             onClick={onClose}
-            className="w-full py-2 text-sm md:text-base font-semibold"
+            className="w-full py-2"
             variant="outline"
           >
             Close Dashboard
