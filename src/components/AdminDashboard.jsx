@@ -64,9 +64,9 @@ const AdminDashboard = ({ isOpen, onClose }) => {
     return paymentStatus !== "paid" && new Date(dueDate) < new Date();
   };
 
-  const handleAddMember = (e) => {
+  const handleAddMember = async (e) => {
     e.preventDefault();
-    
+
     if (!memberForm.name || !memberForm.email || !memberForm.phone || !memberForm.startDate || !memberForm.endDate) {
       alert("Please fill in all fields including membership dates");
       return;
@@ -77,50 +77,91 @@ const AdminDashboard = ({ isOpen, onClose }) => {
       return;
     }
 
-    if (editingMemberId) {
-      // Update existing member
-      setMembers(members.map(member => 
-        member.id === editingMemberId
-          ? {
-              ...member,
-              ...memberForm,
-              allocatedExercise: exerciseForm.exercise,
-              allocatedSets: exerciseForm.sets,
-            }
-          : member
-      ));
-      setEditingMemberId(null);
-    } else {
-      // Create new member
-      const newMember = {
-        id: Date.now(),
-        ...memberForm,
-        paymentAmount: memberForm.paymentAmount || "0",
-        paymentDueDate: memberForm.paymentDueDate || "",
-        paymentStatus: "pending",
-        allocatedExercise: exerciseForm.exercise,
-        allocatedSets: exerciseForm.sets,
-        attendanceRecords: [],
-        recentWorkouts: [],
-      };
-      setMembers([...members, newMember]);
+    try {
+      if (editingMemberId) {
+        // Update existing member (keep localStorage for now)
+        setMembers(members.map(member =>
+          member.id === editingMemberId
+            ? {
+                ...member,
+                ...memberForm,
+                allocatedExercise: exerciseForm.exercise,
+                allocatedSets: exerciseForm.sets,
+              }
+            : member
+        ));
+        setEditingMemberId(null);
+      } else {
+        // Create new member - save to backend
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const response = await fetch(`${API_URL}/api/admin/members/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: memberForm.name,
+            email: memberForm.email,
+            phone: memberForm.phone,
+            membership: memberForm.membership,
+            startDate: memberForm.startDate,
+            endDate: memberForm.endDate,
+            paymentAmount: memberForm.paymentAmount,
+            paymentDueDate: memberForm.paymentDueDate,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create member');
+        }
+
+        const data = await response.json();
+
+        // Show success message with credentials
+        alert(`Member created successfully!\n\nUsername: ${data.member.username}\nPassword: ${data.default_password}\n\nPlease save these credentials!`);
+
+        // Add to local state with allocated exercise info
+        const newMember = {
+          id: data.member.id,
+          name: memberForm.name,
+          email: data.member.email,
+          phone: data.member.phone,
+          membership: memberForm.membership,
+          planType: memberForm.planType,
+          startDate: memberForm.startDate,
+          endDate: memberForm.endDate,
+          paymentAmount: memberForm.paymentAmount || "0",
+          paymentDueDate: memberForm.paymentDueDate || "",
+          paymentStatus: "pending",
+          allocatedExercise: exerciseForm.exercise,
+          allocatedSets: exerciseForm.sets,
+          attendanceRecords: [],
+          recentWorkouts: [],
+        };
+        setMembers([...members, newMember]);
+      }
+
+      // Reset form
+      setMemberForm({
+        name: "",
+        email: "",
+        phone: "",
+        membership: "Essential Fitness",
+        planType: "monthly",
+        startDate: "",
+        endDate: "",
+        paymentAmount: "",
+        paymentDueDate: "",
+      });
+      setExerciseForm({
+        exercise: "",
+        sets: "",
+      });
+    } catch (error) {
+      console.error('Error creating member:', error);
+      alert(`Error: ${error.message}`);
     }
-    
-    setMemberForm({
-      name: "",
-      email: "",
-      phone: "",
-      membership: "Essential Fitness",
-      planType: "monthly",
-      startDate: "",
-      endDate: "",
-      paymentAmount: "",
-      paymentDueDate: "",
-    });
-    setExerciseForm({
-      exercise: "",
-      sets: "",
-    });
   };
 
   const handleDeleteMember = (id) => {
