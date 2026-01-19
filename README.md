@@ -108,6 +108,7 @@ Contributions are welcome! Please follow these steps:
 4. Push to your branch
 5. Open a pull request
 
+<<<<<<< HEAD
 ---
 
 
@@ -137,6 +138,8 @@ For support and questions:
 4. Linda Jerop (Linda-Jerop)
 5. Derrick Koome (Derrickkoome)
 
+=======
+>>>>>>> README
 ---
 
 ## License
@@ -144,10 +147,14 @@ For support and questions:
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
+<<<<<<< HEAD
 
 
 ---
 
+=======
+=======
+>>>>>>> README
 A modern, responsive React application for gym management, built with cutting-edge technologies to provide an intuitive and efficient experience for both gym administrators and members.
 
 ##  About GymFlow
@@ -159,204 +166,129 @@ GymFlow is a comprehensive gym management system designed to streamline operatio
 ### Public Features
 - **Landing Page**: Engaging hero section with video background showcasing gym facilities
 - **About Section**: Information about the gym's mission and values
-- **Services**: Overview of available fitness programs and services
-- **Upcoming Classes**: Display of scheduled fitness classes and events
+# GymFlow Frontend
 
-### Admin Dashboard
-- **Member Management**: Complete CRUD operations for gym members
-- **Check-in System**: Real-time member check-in with validation and feedback
-- **Attendance Tracking**: Automatic attendance recording and reporting
-- **Workout Logging**: Track member workouts and exercise progress
-- **Payment Management**: Monitor membership payments and due dates
-- **Membership Monitoring**: Track active/inactive memberships and expiration dates
+GymFlow Frontend is a modern, responsive React application that helps fitness centers manage members, check-ins, workout logging, and administrative tasks.
 
-### Key Capabilities
-- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
-- **Real-time Updates**: Live check-in feedback and status updates
-- **Data Persistence**: Local storage integration for offline functionality
-- **Intuitive Navigation**: Clean tab-based interface for admin operations
-- **Form Validation**: Comprehensive input validation and error handling
+[Live site](https://kenshar.github.io/gymflow-frontend/) • [Backend repo](https://github.com/kenshar/gymflow-backtend)
+
+---
+
+## Table of Contents
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Available Scripts](#available-scripts)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [Authors](#authors)
+- [License](#license)
+
+---
+
+## Overview
+
+GymFlow provides a clean, mobile-first UI (Tailwind CSS) and a set of admin tools for managing memberships, attendance, and workouts. The frontend is built with React and bundled by Vite.
+
+## Features
+
+- Member registration, login, and profile management
+- Admin dashboard with member CRUD and check-in management
+- Real-time check-in feedback and attendance tracking
+- Workout logging and history per member
+- Embedded video resources and service/event listings
+- Responsive design and reusable UI components
 
 ## Tech Stack
 
-### Frontend Framework
-- **React 19** - Modern JavaScript library for building user interfaces
-- **Vite** - Fast build tool and development server
-- **React Router DOM** - Declarative routing for React applications
+- React
+- Vite
+- Tailwind CSS
+- PostCSS
+- ESLint
 
-### UI & Styling
-- **Tailwind CSS** - Utility-first CSS framework
-- **Radix UI** - Accessible UI primitives
-- **Lucide React** - Beautiful & consistent icon library
-- **Class Variance Authority (CVA)** - Flexible component styling
-- **Tailwind Merge** - Intelligent class merging
-
-### Development Tools
-- **ESLint** - JavaScript linting utility
-- **PostCSS** - CSS processing tool
-- **Autoprefixer** - CSS vendor prefixing
-
-### Additional Libraries
-- **React Hot Toast** - Toast notifications
-- **clsx** - Conditional CSS classes
-
-##  Prerequisites
-
-Before running this project, make sure you have the following installed:
-
-- **Node.js** (version 18 or higher)
-- **npm** or **yarn** package manager
-- **Git** for version control
-
-
-## Usage
-
-### For Gym Administrators
-
-1. **Access Admin Dashboard**
-   - Navigate to `/admin` in your browser
-   - The application uses local authentication for demo purposes
-
-2. **Member Management**
-   - Add new members with personal details, membership plans, and exercise allocations
-   - Edit existing member information
-   - Delete inactive members
-   - View comprehensive member profiles
-
-3. **Check-in Operations**
-   - Select members from dropdown for quick check-in
-   - Automatic validation for membership status and daily check-in limits
-   - Real-time feedback for successful/failed check-ins
-
-4. **Monitoring & Reporting**
-   - Track daily attendance
-   - Monitor payment statuses
-   - View workout progress and frequency
-
-### Navigation
-- Use the tab navigation in the admin panel to switch between "Members" and "Check-in" sections
-- Responsive design ensures optimal viewing on all devices
-
-##  Project Structure
+## Project Structure
 
 ```
 gymflow-frontend/
 ├── public/
 │   ├── videos/
-│   │   └── gym-background.mp4
 │   └── gymflow.svg
 ├── src/
 │   ├── assets/
 │   ├── components/
 │   │   ├── admin/
-│   │   │   ├── AdminHeader.jsx
-│   │   │   ├── CheckInSection.jsx
-│   │   │   ├── CheckInsList.jsx
-│   │   │   ├── MemberForm.jsx
-│   │   │   ├── MemberList.jsx
-│   │   │   └── TabNavigation.jsx
-│   │   ├── ui/
-│   │   │   └── button.jsx
-│   │   ├── About.jsx
-│   │   ├── Footer.jsx
-│   │   ├── Header.jsx
-│   │   ├── Hero.jsx
-│   │   ├── Login.jsx
-│   │   ├── MemberFormModal.jsx
-│   │   ├── Services.jsx
-│   │   └── Upcoming.jsx
+│   │   └── ui/
 │   ├── lib/
-│   │   └── utils.js
 │   ├── pages/
-│   │   ├── AdminPage.jsx
-│   │   ├── Dashboard.jsx
-│   │   ├── MemberProfile.jsx
-│   │   └── WorkoutLogging.jsx
-│   ├── App.css
 │   ├── App.jsx
-│   ├── index.css
 │   └── main.jsx
 ├── index.html
 ├── package.json
-├── tailwind.config.js
 ├── vite.config.js
 └── README.md
 ```
 
+## Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- npm or yarn
+
+### Install and run locally
+
+```bash
+git clone https://github.com/kenshar/gymflow-frontend.git
+cd gymflow-frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:5173 to view the app.
+
 ## Available Scripts
 
-- `npm run dev` - Start the development server
-- `npm run build` - Build the project for production
-- `npm run lint` - Run ESLint for code quality checks
-- `npm run preview` - Preview the production build locally
+- `npm run dev` — Start development server
+- `npm run build` — Build for production
+- `npm run preview` — Preview production build
+- `npm run lint` — Run ESLint
 
-## API Integration
+## Deployment
 
-This frontend is designed to work with the GymFlow backend API. The backend provides:
+This project sets `base` in `vite.config.js` to `/gymflow-frontend/` for GitHub Pages. A GitHub Action is configured to build the app and publish `dist/` to the `gh-pages` branch.
 
-- **Authentication**: JWT-based user authentication
-- **Members API**: CRUD operations for member management
-- **Attendance API**: Check-in and attendance tracking
-- **Workouts API**: Exercise and workout logging
-- **Memberships API**: Membership plan management
+To deploy manually:
 
-### Backend Repository
-For the complete system, ensure the [GymFlow Backend](https://github.com/your-repo/gymflow-backend) is running.
+```bash
+npm run build
+npx gh-pages -d dist -b gh-pages
+```
 
-### Production Configuration
-
-When deploying to production, update the API base URL:
-
-1. **Create environment file**: `.env.production`
-   ```env
-   VITE_API_URL=https://your-backend-domain.com
-   ```
-
-2. **Or set in deployment platform**:
-   - **Vercel**: Environment variables in dashboard
-   - **Netlify**: Build environment variables
-   - **GitHub Pages**: Use public environment or build-time substitution
-
-The app defaults to `http://localhost:5000` for development.
-
-## Customization
-
-### Styling
-- Modify `tailwind.config.js` for custom color schemes and design tokens
-- Update component styles in individual JSX files
-- Customize the video background by replacing `/public/videos/gym-background.mp4`
-
-### Features
-- Add new admin features by creating components in `src/components/admin/`
-- Extend member functionality in the pages directory
-- Integrate additional APIs by updating component logic
+Set `VITE_API_URL` in your production environment to point to the backend API.
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. Fork the repo
+2. Create a branch: `git checkout -b feature/name`
+3. Commit changes
+4. Push and open a PR
 
-## Development Notes
+Please follow the existing code style and run lint before submitting.
 
-- **State Management**: Currently uses React's built-in state management with localStorage persistence
-- **Data Flow**: Props-based data flow with callback functions
-- **Styling Approach**: Utility-first CSS with Tailwind classes
-- **Component Architecture**: Modular component structure with separation of concerns
+## Authors
+
+- Kennedy Ng'ang'a (kenshar)
+- Branice Simaloi (simaloibranice-boop)
+- Allan Ratemo (pyrxallan)
+- Linda Jerop (Linda-Jerop)
+- Derrick Koome (Derrickkoome)
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For support and questions:
-- Create an issue in the repository
-- Contact the development team
-- Check the backend documentation for API-related queries
+This project is licensed under the MIT License. See the `LICENSE` file for details.
 
 ---
 
-**Built with ❤️ for fitness enthusiasts and gym operators**
+Built with ❤️ for fitness enthusiasts and gym operators.
