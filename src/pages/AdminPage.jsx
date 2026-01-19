@@ -1,74 +1,64 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import AdminHeader from "../components/admin/AdminHeader";
 import TabNavigation from "../components/admin/TabNavigation";
 import MemberForm from "../components/admin/MemberForm";
 import MemberList from "../components/admin/MemberList";
 import CheckInSection from "../components/admin/CheckInSection";
 import CheckInsList from "../components/admin/CheckInsList";
+import { membersAPI, attendanceAPI, membershipsAPI, workoutsAPI, isAuthenticated, removeAuthToken } from "../lib/api";
 
 const AdminPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("members"); // "members" or "checkin"
-  const [members, setMembers] = useState(() => {
-    const savedMembers = localStorage.getItem("gymMembers");
-    return savedMembers ? JSON.parse(savedMembers) : [];
-  });
-  const [checkIns, setCheckIns] = useState(() => {
-    const savedCheckIns = localStorage.getItem("gymCheckIns");
-    return savedCheckIns ? JSON.parse(savedCheckIns) : [];
-  });
+  const [members, setMembers] = useState([]);
+  const [checkIns, setCheckIns] = useState([]);
+  const [membershipPlans, setMembershipPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [expandedMember, setExpandedMember] = useState(null);
   const [editingMemberId, setEditingMemberId] = useState(null);
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [checkInFeedback, setCheckInFeedback] = useState(null);
   const [memberForm, setMemberForm] = useState({
-    name: "",
+    username: "",
     email: "",
+    password: "",
+    first_name: "",
+    last_name: "",
     phone: "",
-    membership: "Essential Fitness",
-    planType: "monthly",
-    startDate: "",
-    endDate: "",
-    paymentAmount: "",
-    paymentDueDate: "",
   });
-  const [exercises] = useState([
-    {
-      id: 1,
-      name: "Bench Press",
-      repRanges: ["1-5", "1-10", "1-15"],
-    },
-    {
-      id: 2,
-      name: "Kegel",
-      repRanges: ["1-5", "1-10", "1-15"],
-    },
-    {
-      id: 3,
-      name: "Squats",
-      repRanges: ["1-5", "1-10", "1-15"],
-    },
-    {
-      id: 4,
-      name: "Burpees",
-      repRanges: ["1-5", "1-10", "1-15"],
-    },
-  ]);
-  const [exerciseForm, setExerciseForm] = useState({
-    exercise: "",
-    sets: "",
+  const [membershipForm, setMembershipForm] = useState({
+    plan_id: "",
+    start_date: "",
   });
 
-  // Save members to localStorage whenever they change
+  // Load data on component mount
   useEffect(() => {
-    localStorage.setItem("gymMembers", JSON.stringify(members));
-  }, [members]);
+    if (isAuthenticated()) {
+      loadData();
+    }
+  }, []);
 
-  // Save check-ins to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("gymCheckIns", JSON.stringify(checkIns));
-  }, [checkIns]);
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [membersResponse, checkInsResponse, plansResponse] = await Promise.all([
+        membersAPI.getAll(),
+        attendanceAPI.getToday(),
+        membershipsAPI.getPlans(),
+      ]);
+
+      setMembers(membersResponse.members || []);
+      setCheckIns(checkInsResponse.attendance || []);
+      setMembershipPlans(plansResponse.plans || []);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      toast.error("Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Helper function to check if membership is expired
   const isMembershipExpired = (endDate) => {
@@ -81,66 +71,45 @@ const AdminPage = () => {
   };
 
   // Check-in logic
-  const handleCheckIn = (memberId) => {
-    const member = members.find(m => m.id === memberId);
-    if (!member) {
-      setCheckInFeedback({ type: "error", message: "Member not found" });
-      return;
-    }
+  const handleCheckIn = async (memberId) => {
+    try {
+      const member = members.find(m => m.id === memberId);
+      if (!member) {
+        setCheckInFeedback({ type: "error", message: "Member not found" });
+        return;
+      }
 
-    const today = new Date().toISOString().split('T')[0];
-    const hasCheckedInToday = checkIns.some(
-      ci => ci.memberId === memberId && ci.date === today
-    );
+      const response = await attendanceAPI.checkIn(memberId);
+      const newCheckIn = response.attendance;
 
-    if (hasCheckedInToday) {
-      setCheckInFeedback({ 
-        type: "warning", 
-        message: `${member.name} has already checked in today!`,
+      // Refresh today's check-ins
+      const todayResponse = await attendanceAPI.getToday();
+      setCheckIns(todayResponse.attendance || []);
+
+      setCheckInFeedback({
+        type: "success",
+        message: `✓ Welcome ${member.first_name} ${member.last_name}! Check-in successful.`,
         member
       });
-      return;
+      setSelectedMemberId("");
+
+      toast.success("Check-in successful!");
+    } catch (error) {
+      console.error("Check-in error:", error);
+      if (error.message.includes("already checked in")) {
+        setCheckInFeedback({
+          type: "warning",
+          message: `${member.first_name} ${member.last_name} has already checked in today!`,
+          member
+        });
+      } else {
+        setCheckInFeedback({
+          type: "error",
+          message: error.message || "Check-in failed"
+        });
+        toast.error("Check-in failed");
+      }
     }
-
-    if (isMembershipExpired(member.endDate)) {
-      setCheckInFeedback({ 
-        type: "error", 
-        message: `${member.name}'s membership has expired!`,
-        member
-      });
-      return;
-    }
-
-    // Successful check-in
-    const newCheckIn = {
-      id: Date.now(),
-      memberId,
-      memberName: member.name,
-      date: today,
-      time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-    };
-    
-    setCheckIns([...checkIns, newCheckIn]);
-    
-    // Also update member's attendance records
-    setMembers(members.map(m => 
-      m.id === memberId 
-        ? {
-            ...m,
-            attendanceRecords: [
-              ...(m.attendanceRecords || []),
-              { date: today, id: Date.now(), time: newCheckIn.time }
-            ]
-          }
-        : m
-    ));
-
-    setCheckInFeedback({ 
-      type: "success", 
-      message: `✓ Welcome ${member.name}! Check-in successful.`,
-      member
-    });
-    setSelectedMemberId("");
   };
 
   // Get today's check-ins
@@ -149,85 +118,92 @@ const AdminPage = () => {
     return checkIns.filter(ci => ci.date === today).sort((a, b) => b.time.localeCompare(a.time));
   };
 
-  const handleAddMember = (e) => {
+  const handleAddMember = async (e) => {
     e.preventDefault();
-    
-    if (!memberForm.name || !memberForm.email || !memberForm.phone || !memberForm.startDate || !memberForm.endDate) {
-      alert("Please fill in all fields including membership dates");
+
+    if (!memberForm.username || !memberForm.email || !memberForm.password) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
-    if (!exerciseForm.exercise || !exerciseForm.sets) {
-      alert("Please select an exercise and sets");
-      return;
-    }
+    try {
+      if (editingMemberId) {
+        // Update existing member
+        await membersAPI.update(editingMemberId, {
+          first_name: memberForm.first_name,
+          last_name: memberForm.last_name,
+          email: memberForm.email,
+          phone: memberForm.phone,
+        });
+        toast.success("Member updated successfully!");
+        setEditingMemberId(null);
+      } else {
+        // Create new member
+        const newMember = await membersAPI.create({
+          username: memberForm.username,
+          email: memberForm.email,
+          password: memberForm.password,
+          first_name: memberForm.first_name,
+          last_name: memberForm.last_name,
+          phone: memberForm.phone,
+        });
 
-    if (editingMemberId) {
-      // Update existing member
-      setMembers(members.map(member => 
-        member.id === editingMemberId
-          ? {
-              ...member,
-              ...memberForm,
-              allocatedExercise: exerciseForm.exercise,
-              allocatedSets: exerciseForm.sets,
-            }
-          : member
-      ));
-      setEditingMemberId(null);
-    } else {
-      // Create new member
-      const newMember = {
-        id: Date.now(),
-        ...memberForm,
-        paymentAmount: memberForm.paymentAmount || "0",
-        paymentDueDate: memberForm.paymentDueDate || "",
-        paymentStatus: "pending",
-        allocatedExercise: exerciseForm.exercise,
-        allocatedSets: exerciseForm.sets,
-        attendanceRecords: [],
-        recentWorkouts: [],
-      };
-      setMembers([...members, newMember]);
+        // If membership form is filled, create membership too
+        if (membershipForm.plan_id && membershipForm.start_date) {
+          await membershipsAPI.create({
+            member_id: newMember.member.id,
+            plan_id: parseInt(membershipForm.plan_id),
+            start_date: membershipForm.start_date,
+          });
+        }
+
+        toast.success("Member created successfully!");
+      }
+
+      // Reset forms
+      setMemberForm({
+        username: "",
+        email: "",
+        password: "",
+        first_name: "",
+        last_name: "",
+        phone: "",
+      });
+      setMembershipForm({
+        plan_id: "",
+        start_date: "",
+      });
+
+      // Reload data
+      await loadData();
+    } catch (error) {
+      console.error("Error saving member:", error);
+      toast.error(error.message || "Failed to save member");
     }
-    
-    setMemberForm({
-      name: "",
-      email: "",
-      phone: "",
-      membership: "Essential Fitness",
-      planType: "monthly",
-      startDate: "",
-      endDate: "",
-      paymentAmount: "",
-      paymentDueDate: "",
-    });
-    setExerciseForm({
-      exercise: "",
-      sets: "",
-    });
   };
 
-  const handleDeleteMember = (id) => {
-    setMembers(members.filter(member => member.id !== id));
+  const handleDeleteMember = async (id) => {
+    if (!confirm("Are you sure you want to delete this member?")) return;
+
+    try {
+      await membersAPI.delete(id);
+      toast.success("Member deleted successfully!");
+      await loadData();
+    } catch (error) {
+      console.error("Error deleting member:", error);
+      toast.error("Failed to delete member");
+    }
   };
 
   const handleEditMember = (member) => {
     setEditingMemberId(member.id);
     setMemberForm({
-      name: member.name,
-      email: member.email,
-      phone: member.phone,
-      membership: member.membership,
-      planType: member.planType || "monthly",
-      startDate: member.startDate,
-      endDate: member.endDate,
-      paymentAmount: member.paymentAmount || "",
-      paymentDueDate: member.paymentDueDate || "",
-    });
-    setExerciseForm({
-      exercise: member.allocatedExercise,
-      sets: member.allocatedSets,
+      username: member.username || "",
+      email: member.email || "",
+      password: "", // Don't populate password for security
+      first_name: member.first_name || "",
+      last_name: member.last_name || "",
+      phone: member.phone || "",
     });
     setExpandedMember(null);
     // Scroll to form
@@ -237,63 +213,17 @@ const AdminPage = () => {
   const handleCancelEdit = () => {
     setEditingMemberId(null);
     setMemberForm({
-      name: "",
+      username: "",
       email: "",
+      password: "",
+      first_name: "",
+      last_name: "",
       phone: "",
-      membership: "Essential Fitness",
-      planType: "monthly",
-      startDate: "",
-      endDate: "",
-      paymentAmount: "",
-      paymentDueDate: "",
     });
-    setExerciseForm({
-      exercise: "",
-      sets: "",
+    setMembershipForm({
+      plan_id: "",
+      start_date: "",
     });
-  };
-
-  const handleUpdatePaymentStatus = (id, status) => {
-    setMembers(members.map(member => 
-      member.id === id ? {...member, paymentStatus: status} : member
-    ));
-  };
-
-  // Add attendance record
-  const handleAddAttendance = (memberId) => {
-    const today = new Date().toISOString().split('T')[0];
-    setMembers(members.map(member => 
-      member.id === memberId 
-        ? {
-            ...member, 
-            attendanceRecords: [
-              ...(member.attendanceRecords || []),
-              { date: today, id: Date.now() }
-            ]
-          } 
-        : member
-    ));
-  };
-
-  // Add workout record
-  const handleAddWorkout = (memberId, exerciseName, duration) => {
-    const today = new Date().toISOString().split('T')[0];
-    setMembers(members.map(member => 
-      member.id === memberId 
-        ? {
-            ...member, 
-            recentWorkouts: [
-              {
-                id: Date.now(),
-                exercise: exerciseName,
-                date: today,
-                duration: duration,
-              },
-              ...(member.recentWorkouts || []).slice(0, 4)
-            ]
-          } 
-        : member
-    ));
   };
 
   // Calculate attendance frequency (workouts in last 30 days)
@@ -313,9 +243,20 @@ const AdminPage = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("isAdminAuthenticated");
+    removeAuthToken();
     navigate("/");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -325,19 +266,46 @@ const AdminPage = () => {
       {/* Main Content */}
       <main className="pt-32 pb-12">
         <div className="container mx-auto px-6 space-y-6">
-          
+
           {/* MEMBER MANAGEMENT TAB */}
           {activeTab === "members" && (
             <>
               <MemberForm
-                memberForm={memberForm}
-                setMemberForm={setMemberForm}
-                exerciseForm={exerciseForm}
-                setExerciseForm={setExerciseForm}
-                exercises={exercises}
+                memberForm={{
+                  name: `${memberForm.first_name} ${memberForm.last_name}`.trim(),
+                  email: memberForm.email,
+                  phone: memberForm.phone,
+                  membership: membershipPlans.find(p => p.id === parseInt(membershipForm.plan_id))?.name || "Essential Fitness",
+                  planType: "monthly",
+                  startDate: membershipForm.start_date,
+                  endDate: "",
+                  paymentAmount: "",
+                  paymentDueDate: "",
+                }}
+                setMemberForm={(form) => {
+                  const [firstName, ...lastNameParts] = form.name.split(' ');
+                  setMemberForm({
+                    ...memberForm,
+                    first_name: firstName || '',
+                    last_name: lastNameParts.join(' ') || '',
+                    email: form.email,
+                    phone: form.phone,
+                  });
+                  // Find membership plan by name
+                  const plan = membershipPlans.find(p => p.name === form.membership);
+                  setMembershipForm({
+                    ...membershipForm,
+                    plan_id: plan ? plan.id.toString() : '',
+                    start_date: form.startDate,
+                  });
+                }}
+                exerciseForm={{ exercise: "", sets: "" }}
+                setExerciseForm={() => {}}
+                exercises={[]}
                 editingMemberId={editingMemberId}
                 handleAddMember={handleAddMember}
                 handleCancelEdit={handleCancelEdit}
+                membershipPlans={membershipPlans}
               />
               <MemberList
                 members={members}
@@ -345,12 +313,12 @@ const AdminPage = () => {
                 setExpandedMember={setExpandedMember}
                 handleEditMember={handleEditMember}
                 handleDeleteMember={handleDeleteMember}
-                handleUpdatePaymentStatus={handleUpdatePaymentStatus}
-                handleAddAttendance={handleAddAttendance}
-                handleAddWorkout={handleAddWorkout}
+                handleUpdatePaymentStatus={() => {}}
+                handleAddAttendance={() => {}}
+                handleAddWorkout={() => {}}
                 isMembershipExpired={isMembershipExpired}
-                isPaymentOverdue={isPaymentOverdue}
-                getAttendanceFrequency={getAttendanceFrequency}
+                isPaymentOverdue={() => false}
+                getAttendanceFrequency={() => 0}
                 getActiveStatus={getActiveStatus}
               />
             </>
