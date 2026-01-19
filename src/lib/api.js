@@ -37,11 +37,6 @@ export const authAPI = {
     body: JSON.stringify(credentials),
   }),
 
-  register: (userData) => makeRequest('/api/auth/register', {
-    method: 'POST',
-    body: JSON.stringify(userData),
-  }),
-
   getCurrentUser: () => makeRequest('/api/auth/me'),
   refreshToken: () => makeRequest('/api/auth/refresh', { method: 'POST' }),
   verifyToken: () => makeRequest('/api/auth/verify'),
