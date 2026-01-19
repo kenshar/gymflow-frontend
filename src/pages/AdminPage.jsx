@@ -37,6 +37,8 @@ const AdminPage = () => {
   useEffect(() => {
     if (isAuthenticated()) {
       loadData();
+    } else {
+      setLoading(false);
     }
   }, []);
 
@@ -44,9 +46,9 @@ const AdminPage = () => {
     try {
       setLoading(true);
       const [membersResponse, checkInsResponse, plansResponse] = await Promise.all([
-        membersAPI.getAll(),
-        attendanceAPI.getToday(),
-        membershipsAPI.getPlans(),
+        membersAPI.getAll().catch(err => ({ members: [] })),
+        attendanceAPI.getToday().catch(err => ({ attendance: [] })),
+        membershipsAPI.getPlans().catch(err => ({ plans: [] })),
       ]);
 
       setMembers(membersResponse.members || []);
@@ -54,7 +56,10 @@ const AdminPage = () => {
       setMembershipPlans(plansResponse.plans || []);
     } catch (error) {
       console.error("Error loading data:", error);
-      toast.error("Failed to load data");
+      toast.error("Backend unavailable - using demo mode");
+      setMembers([]);
+      setCheckIns([]);
+      setMembershipPlans([]);
     } finally {
       setLoading(false);
     }
@@ -96,18 +101,19 @@ const AdminPage = () => {
       toast.success("Check-in successful!");
     } catch (error) {
       console.error("Check-in error:", error);
+      const member = members.find(m => m.id === memberId);
       if (error.message.includes("already checked in")) {
         setCheckInFeedback({
           type: "warning",
-          message: `${member.first_name} ${member.last_name} has already checked in today!`,
+          message: `${member?.first_name} ${member?.last_name} has already checked in today!`,
           member
         });
       } else {
         setCheckInFeedback({
           type: "error",
-          message: error.message || "Check-in failed"
+          message: "Backend unavailable - check-in failed"
         });
-        toast.error("Check-in failed");
+        toast.error("Backend unavailable - check-in failed");
       }
     }
   };
@@ -178,7 +184,7 @@ const AdminPage = () => {
       await loadData();
     } catch (error) {
       console.error("Error saving member:", error);
-      toast.error(error.message || "Failed to save member");
+      toast.error(error.message?.includes('fetch') ? "Backend unavailable - cannot save member" : (error.message || "Failed to save member"));
     }
   };
 
@@ -191,7 +197,7 @@ const AdminPage = () => {
       await loadData();
     } catch (error) {
       console.error("Error deleting member:", error);
-      toast.error("Failed to delete member");
+      toast.error(error.message?.includes('fetch') ? "Backend unavailable - cannot delete member" : "Failed to delete member");
     }
   };
 
