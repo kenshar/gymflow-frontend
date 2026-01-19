@@ -1,6 +1,5 @@
 # GymFlow Frontend
 
-<<<<<<< HEAD
 GymFlow Frontend is a modern web application designed to streamline gym management for both members and administrators. Built with React, Vite, and Tailwind CSS, it offers a fast, responsive, and user-friendly experience.
 
 ---
