@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { authAPI, setAuthToken } from "../lib/api";
+import { signIn } from "../lib/auth";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const [credentials, setCredentials] = useState({
-    username: "",
+    email: "",
     password: "",
   });
   const [loading, setLoading] = useState(false);
@@ -16,16 +16,22 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      console.log('Attempting login with:', credentials);
-      const response = await authAPI.login(credentials);
-      console.log('Login response:', response);
-      setAuthToken(response.token);
+      console.log('Attempting login with:', credentials.email);
+      await signIn(credentials.email, credentials.password);
       toast.success("Login successful!");
       console.log('Navigating to /admin');
       navigate("/admin");
     } catch (error) {
       console.error("Login error:", error);
-      toast.error(error.message || "Login failed");
+      if (error.code === 'auth/invalid-email') {
+        toast.error("Invalid email address");
+      } else if (error.code === 'auth/user-not-found') {
+        toast.error("User not found");
+      } else if (error.code === 'auth/wrong-password') {
+        toast.error("Wrong password");
+      } else {
+        toast.error(error.message || "Login failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -50,17 +56,17 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-foreground mb-2">
-              Username
+            <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+              Email
             </label>
             <input
-              type="text"
-              id="username"
-              name="username"
-              value={credentials.username}
+              type="email"
+              id="email"
+              name="email"
+              value={credentials.email}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="Enter your username"
+              placeholder="Enter your email"
               required
             />
           </div>
