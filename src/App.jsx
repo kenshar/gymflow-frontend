@@ -35,7 +35,7 @@ function App() {
   }, []);
 
   return (
-    <Router>
+    <Router basename="/gymflow-frontend">
       <Routes>
         {/* Home Page */}
         <Route
