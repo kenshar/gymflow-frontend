@@ -37,49 +37,6 @@ GymFlow Frontend is designed to provide a seamless experience for both gym membe
 
 ---
 
-eslint.config.js
-index.html
-package.json
-postcss.config.js
-README.md
-tailwind.config.js
-vite.config.js
-public/
-  videos/
-src/
-  App.css
-  App.jsx
-  index.css
-  main.jsx
-  assets/
-  components/
-    About.jsx
-    AdminDashboard.jsx
-    BreadcrumbNavigation.jsx
-    Footer.jsx
-    Header.jsx
-    Hero.jsx
-    Login.jsx
-    MemberFormModal.jsx
-    Services.jsx
-    Upcoming.jsx
-    admin/
-      AdminHeader.jsx
-      CheckInSection.jsx
-      CheckInsList.jsx
-      MemberForm.jsx
-      MemberList.jsx
-      TabNavigation.jsx
-    ui/
-      button.jsx
-  lib/
-    utils.js
-  pages/
-    AdminPage.jsx
-    Dashboard.jsx
-    MemberProfile.jsx
-    WorkoutLogging.jsx
-
 ## Project Structure
 
 ```
@@ -123,23 +80,6 @@ git clone https://github.com/kenshar/gymflow-frontend.git
 cd gymflow-frontend
 npm install
 ```
-
-### Running the App
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173) in your browser to view the app.
-
----
-
-## Available Scripts
-- `npm run dev` — Start development server
-- `npm run build` — Build for production
-- `npm run preview` — Preview production build
-- `npm run lint` — Run ESLint for code quality
-
 ---
 
 ## Technologies Used
@@ -168,7 +108,6 @@ Contributions are welcome! Please follow these steps:
 3. Commit your changes
 4. Push to your branch
 5. Open a pull request
-
 
 ---
 
