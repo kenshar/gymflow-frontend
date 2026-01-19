@@ -4,6 +4,8 @@
 GymFlow Frontend is a modern web application designed to streamline gym management for both members and administrators. Built with React, Vite, and Tailwind CSS, it offers a fast, responsive, and user-friendly experience.
 
 ---
+[Live link](https://github.com/kenshar/gymflow-frontend)
+
 
 ## Table of Contents
 - [Features](#features)
@@ -373,16 +375,25 @@ The app defaults to `http://localhost:5000` for development.
 - **Styling Approach**: Utility-first CSS with Tailwind classes
 - **Component Architecture**: Modular component structure with separation of concerns
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## Support
 
 For support and questions:
 - Create an issue in the repository
 - Contact the development team
 - Check the backend documentation for API-related queries
+
+## Authors
+
+Kennedy Ng'ang'a (kenshar)
+Branice Simaloi (simaloibranice-boop)
+Allan Ratemo (pyrxallan)
+Linda Jerop (Linda-Jerop)
+Derrick Koome (Derrickkoome)
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
 
 ---
 
