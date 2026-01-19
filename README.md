@@ -259,11 +259,12 @@ Open http://localhost:5173 to view the app.
 
 This project sets `base` in `vite.config.js` to `/gymflow-frontend/` for GitHub Pages. A GitHub Action is configured to build the app and publish `dist/` to the `gh-pages` branch.
 
-To deploy manually:
+Deployment is automated via GitHub Actions: the repository workflow builds the site and publishes `dist/` to GitHub Pages when changes are pushed to `main` or `README`.
+
+If you need to deploy manually (not recommended), you can still build locally with:
 
 ```bash
 npm run build
-npx gh-pages -d dist -b gh-pages
 ```
 
 Set `VITE_API_URL` in your production environment to point to the backend API.
