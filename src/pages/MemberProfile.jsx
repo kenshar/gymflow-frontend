@@ -1,263 +1,285 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, User, Activity, Dumbbell, Clock, TrendingUp } from "lucide-react";
+import { ArrowLeft, User, Mail, Phone, Calendar, Shield, Edit, Trash2, Save, X } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { membersAPI } from "../lib/api";
+import toast from "react-hot-toast";
 
 const MemberProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [member, setMember] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+  });
 
   useEffect(() => {
-    const savedMembers = localStorage.getItem("gymMembers");
-    if (savedMembers) {
-      const members = JSON.parse(savedMembers);
-      const foundMember = members.find(m => m.id === parseInt(id));
-      setMember(foundMember);
-    }
+    loadMember();
   }, [id]);
 
-  if (!member) {
+  const loadMember = async () => {
+    try {
+      setLoading(true);
+      const response = await membersAPI.getById(id);
+      setMember(response.member);
+      setEditForm({
+        first_name: response.member.first_name || "",
+        last_name: response.member.last_name || "",
+        email: response.member.email || "",
+        phone: response.member.phone || "",
+      });
+    } catch (error) {
+      console.error("Error loading member:", error);
+      toast.error("Failed to load member");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    try {
+      await membersAPI.update(id, editForm);
+      toast.success("Member updated successfully!");
+      setEditing(false);
+      loadMember();
+    } catch (error) {
+      console.error("Error updating member:", error);
+      toast.error("Failed to update member");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this member? This cannot be undone.")) return;
+
+    try {
+      await membersAPI.delete(id);
+      toast.success("Member deleted successfully!");
+      navigate("/admin");
+    } catch (error) {
+      console.error("Error deleting member:", error);
+      toast.error("Failed to delete member");
+    }
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground mb-4">Member not found</p>
-          <Button onClick={() => navigate("/admin")}>Back to Admin</Button>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading member...</p>
         </div>
       </div>
     );
   }
 
-  // Helper functions
-  const isMembershipExpired = (endDate) => {
-    return new Date(endDate) < new Date();
-  };
+  if (!member) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <User size={32} className="text-red-400" />
+          </div>
+          <p className="text-xl font-semibold mb-2">Member not found</p>
+          <p className="text-muted-foreground mb-6">The member you're looking for doesn't exist.</p>
+          <Button onClick={() => navigate("/admin")} className="bg-primary hover:bg-primary/90">
+            <ArrowLeft size={18} className="mr-2" />
+            Back to Admin
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
-  const isPaymentOverdue = (dueDate, paymentStatus) => {
-    return paymentStatus !== "paid" && new Date(dueDate) < new Date();
-  };
-
-  const getAttendanceFrequency = (records = []) => {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return records.filter(record => new Date(record.date) >= thirtyDaysAgo).length;
-  };
-
-  const getActiveStatus = (member) => {
-    const expired = isMembershipExpired(member.endDate);
-    const today = new Date().toISOString().split('T')[0];
-    const hasStarted = new Date(member.startDate) <= new Date(today);
-    return hasStarted && !expired ? "Active" : "Inactive";
-  };
-
-  const expired = isMembershipExpired(member.endDate);
-  const overdue = isPaymentOverdue(member.paymentDueDate, member.paymentStatus);
-  const attendanceFrequency = getAttendanceFrequency(member.attendanceRecords);
-  const activeStatus = getActiveStatus(member);
-  const totalWorkouts = member.recentWorkouts?.length || 0;
+  const memberName = `${member.first_name || ""} ${member.last_name || ""}`.trim() || member.username;
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-md border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <Button
             onClick={() => navigate("/admin")}
             variant="outline"
-            className="flex items-center gap-2 border-primary text-primary hover:bg-primary/10"
+            className="flex items-center gap-2"
           >
             <ArrowLeft size={18} />
-            Back to Admin
+            Back
           </Button>
-          <h1 className="font-display text-2xl md:text-3xl tracking-wider gradient-text">
+          <h1 className="font-display text-2xl tracking-wider gradient-text">
             MEMBER PROFILE
           </h1>
-          <div></div> {/* Spacer */}
+          <div className="flex gap-2">
+            {!editing && (
+              <>
+                <Button
+                  onClick={() => setEditing(true)}
+                  variant="outline"
+                  className="flex items-center gap-2 border-blue-500 text-blue-500 hover:bg-blue-500/10"
+                >
+                  <Edit size={16} />
+                  Edit
+                </Button>
+                <Button
+                  onClick={handleDelete}
+                  variant="outline"
+                  className="flex items-center gap-2 border-red-500 text-red-500 hover:bg-red-500/10"
+                >
+                  <Trash2 size={16} />
+                  Delete
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="pt-24 pb-12">
-        <div className="container mx-auto px-6 max-w-6xl">
-          {/* Member Header */}
-          <div className="bg-slate-700/80 rounded-xl p-8 border border-border mb-8">
-            <div className="flex items-start gap-6">
-              <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center">
-                <User size={32} className="text-primary" />
+        <div className="container mx-auto px-6 max-w-4xl">
+          {/* Profile Card */}
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 border border-slate-700 shadow-xl">
+            {/* Avatar & Name */}
+            <div className="flex flex-col md:flex-row items-center gap-6 mb-8">
+              <div className={`w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold ${
+                member.is_active
+                  ? "bg-gradient-to-br from-green-500 to-emerald-600"
+                  : "bg-gradient-to-br from-gray-500 to-gray-600"
+              }`}>
+                {(member.first_name?.[0] || member.username?.[0] || "?").toUpperCase()}
               </div>
-              <div className="flex-1">
-                <h2 className="text-3xl font-semibold mb-2">{member.name}</h2>
-                <div className="flex items-center gap-4 mb-4">
-                  <span className={`inline-block px-3 py-1 text-sm font-semibold rounded ${
-                    activeStatus === "Active"
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-gray-500/20 text-gray-400"
-                  }`}>
-                    {activeStatus}
-                  </span>
-                  {expired && (
-                    <span className="inline-block px-3 py-1 text-sm bg-red-600 text-white rounded font-semibold">
-                      EXPIRED
-                    </span>
-                  )}
-                  {overdue && (
-                    <span className="inline-block px-3 py-1 text-sm bg-orange-600 text-white rounded font-semibold">
-                      PAYMENT OVERDUE
-                    </span>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
-                  <div>📧 {member.email}</div>
-                  <div>📱 {member.phone}</div>
-                  <div>💪 {member.membership}</div>
-                  <div>📅 Plan: {member.planType || "monthly"}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Membership & Payment Info */}
-            <div className="lg:col-span-1 space-y-6">
-              {/* Membership Details */}
-              <div className="bg-slate-700/80 rounded-xl p-6 border border-border">
-                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Calendar size={20} className="text-primary" />
-                  Membership Details
-                </h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Start Date:</span>
-                    <span className="font-medium">{member.startDate}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">End Date:</span>
-                    <span className="font-medium">{member.endDate}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Exercise:</span>
-                    <span className="font-medium">{member.allocatedExercise} - {member.allocatedSets}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Info */}
-              {member.paymentDueDate && (
-                <div className="bg-slate-700/80 rounded-xl p-6 border border-border">
-                  <h3 className="text-xl font-semibold mb-4">Payment Info</h3>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Amount:</span>
-                      <span className="font-medium">Ksh {parseFloat(member.paymentAmount || 0).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Due Date:</span>
-                      <span className="font-medium">{member.paymentDueDate}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status:</span>
-                      <span className={`font-medium ${
-                        member.paymentStatus === "paid" ? "text-green-400" : "text-orange-400"
-                      }`}>
-                        {member.paymentStatus || "pending"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Stats Overview */}
-              <div className="bg-slate-700/80 rounded-xl p-6 border border-border">
-                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <TrendingUp size={20} className="text-primary" />
-                  Quick Stats
-                </h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Last 30 Days:</span>
-                    <span className="font-medium">{attendanceFrequency} visits</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Workouts:</span>
-                    <span className="font-medium">{totalWorkouts}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Membership:</span>
-                    <span className="font-medium">{member.membership}</span>
-                  </div>
-                </div>
+              <div className="text-center md:text-left">
+                <h2 className="text-3xl font-bold mb-2">{memberName}</h2>
+                <p className="text-muted-foreground mb-3">@{member.username}</p>
+                <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
+                  member.is_active
+                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                    : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
+                }`}>
+                  <div className={`w-2 h-2 rounded-full ${member.is_active ? "bg-green-400" : "bg-gray-400"}`}></div>
+                  {member.is_active ? "Active Member" : "Inactive"}
+                </span>
               </div>
             </div>
 
-            {/* Attendance & Workouts */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Recent Attendance */}
-              <div className="bg-slate-700/80 rounded-xl p-6 border border-border">
-                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Activity size={20} className="text-primary" />
-                  Recent Attendance
-                </h3>
-                {member.attendanceRecords && member.attendanceRecords.length > 0 ? (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {member.attendanceRecords.slice(-10).reverse().map((record) => (
-                      <div key={record.id} className="flex items-center justify-between p-3 bg-slate-600/30 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                            <Activity size={16} className="text-green-400" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm">Check-in</p>
-                            <p className="text-xs text-muted-foreground">{record.date}</p>
-                          </div>
-                        </div>
-                        <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
-                          Present
-                        </span>
-                      </div>
-                    ))}
+            {/* Info Grid */}
+            {editing ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-muted-foreground">First Name</label>
+                    <input
+                      type="text"
+                      value={editForm.first_name}
+                      onChange={(e) => setEditForm({...editForm, first_name: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-700/50 text-foreground border border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    />
                   </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">No attendance records yet</p>
-                )}
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-muted-foreground">Last Name</label>
+                    <input
+                      type="text"
+                      value={editForm.last_name}
+                      onChange={(e) => setEditForm({...editForm, last_name: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-700/50 text-foreground border border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-muted-foreground">Email</label>
+                    <input
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-700/50 text-foreground border border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-muted-foreground">Phone</label>
+                    <input
+                      type="tel"
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-700/50 text-foreground border border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={handleUpdate}
+                    className="flex-1 py-3 bg-green-600 hover:bg-green-700"
+                  >
+                    <Save size={18} className="mr-2" />
+                    Save Changes
+                  </Button>
+                  <Button
+                    onClick={() => setEditing(false)}
+                    variant="outline"
+                    className="flex-1 py-3 border-slate-600"
+                  >
+                    <X size={18} className="mr-2" />
+                    Cancel
+                  </Button>
+                </div>
               </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-slate-700/30 rounded-xl p-5 border border-slate-600/50">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                      <Mail size={20} className="text-blue-400" />
+                    </div>
+                    <span className="text-sm text-muted-foreground">Email</span>
+                  </div>
+                  <p className="text-lg font-medium">{member.email}</p>
+                </div>
 
-              {/* Recent Workouts */}
-              <div className="bg-slate-700/80 rounded-xl p-6 border border-border">
-                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Dumbbell size={20} className="text-primary" />
-                  Recent Workouts
-                </h3>
-                {member.recentWorkouts && member.recentWorkouts.length > 0 ? (
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {member.recentWorkouts.map((workout) => (
-                      <div key={workout.id} className="bg-slate-600/30 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-medium">{workout.date}</h4>
-                          {workout.duration && (
-                            <span className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Clock size={14} />
-                              {workout.duration} min
-                            </span>
-                          )}
-                        </div>
-                        <div className="space-y-2">
-                          {workout.exercises?.map((exercise, index) => (
-                            <div key={index} className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">{exercise.name}</span>
-                              <span className="font-medium">
-                                {exercise.sets} sets × {exercise.reps} reps
-                                {exercise.weight && ` @ ${exercise.weight} lbs`}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                <div className="bg-slate-700/30 rounded-xl p-5 border border-slate-600/50">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                      <Phone size={20} className="text-purple-400" />
+                    </div>
+                    <span className="text-sm text-muted-foreground">Phone</span>
                   </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">No workouts logged yet</p>
-                )}
+                  <p className="text-lg font-medium">{member.phone || "Not provided"}</p>
+                </div>
+
+                <div className="bg-slate-700/30 rounded-xl p-5 border border-slate-600/50">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                      <Shield size={20} className="text-green-400" />
+                    </div>
+                    <span className="text-sm text-muted-foreground">Role</span>
+                  </div>
+                  <p className="text-lg font-medium capitalize">{member.role}</p>
+                </div>
+
+                <div className="bg-slate-700/30 rounded-xl p-5 border border-slate-600/50">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                      <Calendar size={20} className="text-orange-400" />
+                    </div>
+                    <span className="text-sm text-muted-foreground">Member Since</span>
+                  </div>
+                  <p className="text-lg font-medium">
+                    {new Date(member.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
               </div>
+            )}
+
+            {/* Member ID */}
+            <div className="mt-8 pt-6 border-t border-slate-700">
+              <p className="text-sm text-muted-foreground">
+                Member ID: <span className="font-mono text-foreground">#{member.id}</span>
+              </p>
             </div>
           </div>
         </div>
