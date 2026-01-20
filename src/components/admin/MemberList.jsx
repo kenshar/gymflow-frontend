@@ -27,53 +27,38 @@ const MemberList = ({
       ) : (
         <div className="space-y-4">
           {members.map((member) => {
-            const expired = isMembershipExpired(member.endDate);
-            const overdue = isPaymentOverdue(member.paymentDueDate, member.paymentStatus);
-            const attendanceFrequency = getAttendanceFrequency(member.attendanceRecords);
-            const activeStatus = getActiveStatus(member);
+            const memberName = `${member.first_name || ''} ${member.last_name || ''}`.trim() || member.username || 'Unknown';
+            const isActive = member.is_active;
             const isExpanded = expandedMember === member.id;
 
             return (
               <div
                 key={member.id}
-                className={`rounded-lg border transition-all ${
-                  expired || overdue
-                    ? "bg-red-500/10 border-red-500/30"
-                    : "bg-slate-600/50 border-border"
-                }`}
+                className="rounded-lg border transition-all bg-slate-600/50 border-border hover:border-primary/50"
               >
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
-                        <p className="font-medium text-lg">{member.name}</p>
+                        <p className="font-medium text-lg">{memberName}</p>
+                        <span className="text-sm text-muted-foreground">@{member.username}</span>
                         <span className={`inline-block px-3 py-1 text-xs font-semibold rounded ${
-                          activeStatus === "Active"
+                          isActive
                             ? "bg-green-500/20 text-green-400"
                             : "bg-gray-500/20 text-gray-400"
                         }`}>
-                          {activeStatus}
+                          {isActive ? "Active" : "Inactive"}
                         </span>
-                        {expired && (
-                          <span className="inline-block px-3 py-1 text-xs bg-red-600 text-white rounded font-semibold">
-                            EXPIRED
-                          </span>
-                        )}
-                        {overdue && (
-                          <span className="inline-block px-3 py-1 text-xs bg-orange-600 text-white rounded font-semibold">
-                            OVERDUE
-                          </span>
-                        )}
                       </div>
 
-                      {/* Summary Row */}
-                      <div className="flex gap-6 text-sm text-muted-foreground mb-3 flex-wrap">
-                        <span>📊 Attendance: {attendanceFrequency} visits (last 30 days)</span>
-                        <span>💪 Latest Workout: {member.recentWorkouts?.[0]?.date || "N/A"}</span>
+                      {/* Member Info */}
+                      <div className="flex gap-6 text-sm text-muted-foreground mb-2 flex-wrap">
+                        <span>📧 {member.email}</span>
+                        {member.phone && <span>📱 {member.phone}</span>}
                       </div>
-
-                      <p className="text-sm text-muted-foreground">{member.email}</p>
-                      <p className="text-sm text-muted-foreground">{member.phone}</p>
+                      <div className="text-xs text-muted-foreground">
+                        Joined: {new Date(member.created_at).toLocaleDateString()}
+                      </div>
                     </div>
 
                     <div className="flex gap-2 items-center">
@@ -109,92 +94,34 @@ const MemberList = ({
 
                   {/* Expanded Details */}
                   {isExpanded && (
-                    <div className="mt-6 pt-6 border-t border-border space-y-6">
-                      {/* Basic Info */}
-                      <div>
-                        <p className="text-sm font-semibold mb-3">Membership Details</p>
-                        <div className="text-sm text-muted-foreground space-y-2 grid grid-cols-2 gap-4">
-                          <p>Type: {member.membership}</p>
-                          <p>Plan: <span className="font-medium text-foreground capitalize">{member.planType || "monthly"}</span></p>
-                          <p>Start: {member.startDate}</p>
-                          <p>End: {member.endDate}</p>
-                          <p>Exercise: {member.allocatedExercise} - {member.allocatedSets}</p>
-                        </div>
-                      </div>
-
-                      {/* Payment Info */}
-                      {member.paymentDueDate && (
+                    <div className="mt-6 pt-6 border-t border-border space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <p className="text-sm font-semibold mb-3">Payment Info</p>
-                          <div className="flex gap-4 items-center text-sm flex-wrap">
-                            <span>Amount: Ksh {parseFloat(member.paymentAmount || 0).toFixed(2)}</span>
-                            <span>Due: {member.paymentDueDate}</span>
-                            <select
-                              value={member.paymentStatus}
-                              onChange={(e) => handleUpdatePaymentStatus(member.id, e.target.value)}
-                              className={`px-3 py-1 rounded text-sm font-medium cursor-pointer ${
-                                member.paymentStatus === "paid"
-                                  ? "bg-green-500/20 text-green-400 border border-green-500/50"
-                                  : "bg-orange-500/20 text-orange-400 border border-orange-500/50"
-                              }`}
-                            >
-                              <option value="pending">Pending</option>
-                              <option value="paid">Paid</option>
-                            </select>
-                          </div>
+                          <p className="text-muted-foreground">Username</p>
+                          <p className="font-medium">{member.username}</p>
                         </div>
-                      )}
-
-                      {/* Attendance Summary */}
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <p className="text-sm font-semibold">Attendance Summary</p>
-                          <button
-                            onClick={() => handleAddAttendance(member.id)}
-                            className="px-3 py-1 text-sm bg-primary/20 text-primary rounded hover:bg-primary/30 transition-colors"
-                          >
-                            + Log Visit
-                          </button>
+                        <div>
+                          <p className="text-muted-foreground">Email</p>
+                          <p className="font-medium">{member.email}</p>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Total: {attendanceFrequency} visits (last 30 days)
-                        </p>
-                        {member.attendanceRecords && member.attendanceRecords.length > 0 && (
-                          <div className="text-sm text-muted-foreground space-y-1 max-h-24 overflow-y-auto">
-                            <p>Recent visits:</p>
-                            {member.attendanceRecords.slice(-5).reverse().map((record) => (
-                              <div key={record.id} className="text-sm">✓ {record.date}</div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Recent Workouts */}
-                      <div>
-                        <p className="text-sm font-semibold mb-3">Recent Workouts</p>
-                        {member.recentWorkouts && member.recentWorkouts.length > 0 ? (
-                          <div className="space-y-2">
-                            {member.recentWorkouts.map((workout) => (
-                              <div key={workout.id} className="text-sm bg-slate-700/50 p-3 rounded">
-                                <p className="font-medium">{workout.exercise}</p>
-                                <p className="text-muted-foreground">
-                                  {workout.date} {workout.duration ? `• ${workout.duration} min` : ""}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">No workouts logged yet</p>
-                        )}
-                        <button
-                          onClick={() => {
-                            const duration = prompt("Duration (minutes):", "30");
-                            if (duration) handleAddWorkout(member.id, member.allocatedExercise, duration);
-                          }}
-                          className="mt-3 px-3 py-1 text-sm bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 transition-colors"
-                        >
-                          + Log Workout
-                        </button>
+                        <div>
+                          <p className="text-muted-foreground">Phone</p>
+                          <p className="font-medium">{member.phone || "Not provided"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Role</p>
+                          <p className="font-medium capitalize">{member.role}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Member ID</p>
+                          <p className="font-medium">#{member.id}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Status</p>
+                          <p className={`font-medium ${member.is_active ? 'text-green-400' : 'text-gray-400'}`}>
+                            {member.is_active ? "Active Membership" : "No Active Membership"}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}

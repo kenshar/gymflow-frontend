@@ -120,10 +120,10 @@ const MemberForm = ({
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 pt-4">
           <Button
             type="submit"
-            className="flex-1 py-3 text-base font-semibold"
+            className="flex-1 py-4 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             {editingMemberId ? "Update Member" : "Add Member"}
           </Button>
@@ -132,7 +132,7 @@ const MemberForm = ({
               type="button"
               variant="outline"
               onClick={handleCancelEdit}
-              className="flex-1 py-3 text-base font-semibold"
+              className="flex-1 py-4 text-base font-semibold border-red-500 text-red-500 hover:bg-red-500/10"
             >
               Cancel Edit
             </Button>
