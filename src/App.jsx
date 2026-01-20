@@ -12,6 +12,7 @@ import LoginPage from "./pages/LoginPage";
 import WorkoutLogging from "./pages/WorkoutLogging";
 import MemberProfile from "./pages/MemberProfile";
 import Dashboard from "./pages/Dashboard";
+import PaymentsPage from "./pages/PaymentsPage";
 
 // Protected Route component
 const ProtectedRoute = ({ children, user, loading }) => {
@@ -62,6 +63,7 @@ function App() {
         <Route path="/admin/workout-logging" element={<ProtectedRoute user={user} loading={loading}><WorkoutLogging /></ProtectedRoute>} />
         <Route path="/admin/member/:id" element={<ProtectedRoute user={user} loading={loading}><MemberProfile /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute user={user} loading={loading}><Dashboard /></ProtectedRoute>} />
+        <Route path="/admin/payments" element={<ProtectedRoute user={user} loading={loading}><PaymentsPage /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

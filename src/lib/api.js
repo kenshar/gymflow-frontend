@@ -117,6 +117,37 @@ export const workoutsAPI = {
   }),
 };
 
+// Payments API
+export const paymentsAPI = {
+  getAll: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return makeRequest(`/api/payments?${queryString}`);
+  },
+  getById: (id) => makeRequest(`/api/payments/${id}`),
+  recordCashPayment: (paymentData) => makeRequest('/api/payments/cash', {
+    method: 'POST',
+    body: JSON.stringify(paymentData),
+  }),
+  createStripeCheckout: (planId) => makeRequest('/api/payments/stripe/create-checkout', {
+    method: 'POST',
+    body: JSON.stringify({ plan_id: planId }),
+  }),
+  getReceiptUrl: (receiptId) => `${API_BASE_URL}/api/payments/receipts/${receiptId}/download`,
+  downloadReceipt: async (receiptId) => {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/api/payments/receipts/${receiptId}/download`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to download receipt');
+    }
+    return response.blob();
+  },
+  getRevenueStats: () => makeRequest('/api/payments/admin/revenue'),
+};
+
 // Utility functions
 export const setAuthToken = (token) => {
   localStorage.setItem('authToken', token);
