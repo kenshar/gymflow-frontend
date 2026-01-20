@@ -278,36 +278,24 @@ const AdminPage = () => {
             <>
               <MemberForm
                 memberForm={{
-                  name: `${memberForm.first_name} ${memberForm.last_name}`.trim(),
-                  email: memberForm.email,
-                  phone: memberForm.phone,
-                  membership: membershipPlans.find(p => p.id === parseInt(membershipForm.plan_id))?.name || "Essential Fitness",
-                  planType: "monthly",
-                  startDate: membershipForm.start_date,
-                  endDate: "",
-                  paymentAmount: "",
-                  paymentDueDate: "",
+                  ...memberForm,
+                  plan_id: membershipForm.plan_id,
+                  start_date: membershipForm.start_date,
                 }}
                 setMemberForm={(form) => {
-                  const [firstName, ...lastNameParts] = form.name.split(' ');
                   setMemberForm({
-                    ...memberForm,
-                    first_name: firstName || '',
-                    last_name: lastNameParts.join(' ') || '',
-                    email: form.email,
-                    phone: form.phone,
+                    username: form.username || '',
+                    email: form.email || '',
+                    password: form.password || '',
+                    first_name: form.first_name || '',
+                    last_name: form.last_name || '',
+                    phone: form.phone || '',
                   });
-                  // Find membership plan by name
-                  const plan = membershipPlans.find(p => p.name === form.membership);
                   setMembershipForm({
-                    ...membershipForm,
-                    plan_id: plan ? plan.id.toString() : '',
-                    start_date: form.startDate,
+                    plan_id: form.plan_id || '',
+                    start_date: form.start_date || '',
                   });
                 }}
-                exerciseForm={{ exercise: "", sets: "" }}
-                setExerciseForm={() => {}}
-                exercises={[]}
                 editingMemberId={editingMemberId}
                 handleAddMember={handleAddMember}
                 handleCancelEdit={handleCancelEdit}
