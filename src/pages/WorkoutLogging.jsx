@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Plus, Trash2, Save, Dumbbell, Search, X } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { membersAPI, workoutsAPI } from "../lib/api";
 
 const WorkoutLogging = () => {
   const navigate = useNavigate();
@@ -20,17 +21,8 @@ const WorkoutLogging = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("https://gymflow-backtend-1.onrender.com/api/members", {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setMembers(data.members || []);
-        }
+        const response = await membersAPI.getAll();
+        setMembers(response.members || []);
       } catch (error) {
         console.error("Failed to fetch members:", error);
       }
@@ -70,8 +62,6 @@ const WorkoutLogging = () => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
-
       const workoutData = {
         member_id: selectedMemberId,
         workout_date: new Date(workoutDate).toISOString(),
@@ -86,31 +76,19 @@ const WorkoutLogging = () => {
           }))
       };
 
-      const response = await fetch("https://gymflow-backtend-1.onrender.com/api/workouts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(workoutData)
-      });
+      await workoutsAPI.create(workoutData);
 
-      if (response.ok) {
-        // Reset form
-        setSelectedMemberId("");
-        setSearchTerm("");
-        setWorkoutExercises([{ id: 1, name: "", sets: "", reps: "", weight: "" }]);
-        setWorkoutDate(new Date().toISOString().split('T')[0]);
-        setDuration("");
+      // Reset form
+      setSelectedMemberId("");
+      setSearchTerm("");
+      setWorkoutExercises([{ id: 1, name: "", sets: "", reps: "", weight: "" }]);
+      setWorkoutDate(new Date().toISOString().split('T')[0]);
+      setDuration("");
 
-        alert("Workout logged successfully!");
-      } else {
-        const error = await response.json();
-        alert(`Failed to log workout: ${error.error || "Unknown error"}`);
-      }
+      alert("Workout logged successfully!");
     } catch (error) {
       console.error("Error logging workout:", error);
-      alert("Failed to log workout. Please try again.");
+      alert(`Failed to log workout: ${error.message || "Please try again."}`);
     } finally {
       setLoading(false);
     }
