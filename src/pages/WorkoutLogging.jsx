@@ -1,62 +1,119 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Save, Dumbbell } from "lucide-react";
+import { Plus, Trash2, Save, Dumbbell, Search, X } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 const WorkoutLogging = () => {
   const navigate = useNavigate();
-  const [members, setMembers] = useState(() => {
-    const savedMembers = localStorage.getItem("gymMembers");
-    return savedMembers ? JSON.parse(savedMembers) : [];
-  });
+  const [members, setMembers] = useState([]);
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [workoutExercises, setWorkoutExercises] = useState([
     { id: 1, name: "", sets: "", reps: "", weight: "" }
   ]);
   const [workoutDate, setWorkoutDate] = useState(new Date().toISOString().split('T')[0]);
   const [duration, setDuration] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Fetch members from API
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("https://gymflow-backtend-1.onrender.com/api/members", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setMembers(data.members || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch members:", error);
+      }
+    };
+
+    fetchMembers();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownOpen && !e.target.closest('.relative')) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpen]);
+
+  // Filter members based on search term
+  const filteredMembers = members.filter(member =>
+    `${member.first_name} ${member.last_name} ${member.email} ${member.username}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
+  const selectedMember = members.find(m => m.id === selectedMemberId);
 
   // Save workout
-  const handleSaveWorkout = () => {
+  const handleSaveWorkout = async () => {
     if (!selectedMemberId || workoutExercises.some(ex => !ex.name || !ex.sets || !ex.reps)) {
       alert("Please fill in all required fields");
       return;
     }
 
-    const member = members.find(m => m.id === selectedMemberId);
-    if (!member) return;
+    setLoading(true);
 
-    const workoutData = {
-      id: Date.now(),
-      memberId: selectedMemberId,
-      memberName: member.name,
-      date: workoutDate,
-      duration: duration ? parseInt(duration) : null,
-      exercises: workoutExercises.filter(ex => ex.name && ex.sets && ex.reps)
-    };
+    try {
+      const token = localStorage.getItem("token");
 
-    // Update member's recent workouts
-    const updatedMembers = members.map(m => {
-      if (m.id === selectedMemberId) {
-        const updatedWorkouts = [
-          workoutData,
-          ...(m.recentWorkouts || []).slice(0, 9) // Keep last 10 workouts
-        ];
-        return { ...m, recentWorkouts: updatedWorkouts };
+      const workoutData = {
+        member_id: selectedMemberId,
+        workout_date: new Date(workoutDate).toISOString(),
+        duration: duration ? parseInt(duration) : null,
+        exercises: workoutExercises
+          .filter(ex => ex.name && ex.sets && ex.reps)
+          .map(ex => ({
+            exercise_name: ex.name,
+            sets: parseInt(ex.sets),
+            reps: parseInt(ex.reps),
+            weight: ex.weight ? parseFloat(ex.weight) : null
+          }))
+      };
+
+      const response = await fetch("https://gymflow-backtend-1.onrender.com/api/workouts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(workoutData)
+      });
+
+      if (response.ok) {
+        // Reset form
+        setSelectedMemberId("");
+        setSearchTerm("");
+        setWorkoutExercises([{ id: 1, name: "", sets: "", reps: "", weight: "" }]);
+        setWorkoutDate(new Date().toISOString().split('T')[0]);
+        setDuration("");
+
+        alert("Workout logged successfully!");
+      } else {
+        const error = await response.json();
+        alert(`Failed to log workout: ${error.error || "Unknown error"}`);
       }
-      return m;
-    });
-
-    setMembers(updatedMembers);
-    localStorage.setItem("gymMembers", JSON.stringify(updatedMembers));
-
-    // Reset form
-    setSelectedMemberId("");
-    setWorkoutExercises([{ id: 1, name: "", sets: "", reps: "", weight: "" }]);
-    setWorkoutDate(new Date().toISOString().split('T')[0]);
-    setDuration("");
-
-    alert("Workout logged successfully!");
+    } catch (error) {
+      console.error("Error logging workout:", error);
+      alert("Failed to log workout. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Add exercise
@@ -110,20 +167,81 @@ const WorkoutLogging = () => {
 
             <div className="space-y-6">
               {/* Member Selection */}
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium mb-2 text-foreground">Select Member</label>
-                <select
-                  value={selectedMemberId}
-                  onChange={(e) => setSelectedMemberId(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
-                >
-                  <option value="">-- Choose a member --</option>
-                  {members.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.name} - {member.allocatedExercise}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <div
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="w-full px-4 py-2 rounded-lg bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm cursor-pointer flex items-center justify-between"
+                  >
+                    <span className={selectedMember ? "text-foreground" : "text-muted-foreground"}>
+                      {selectedMember
+                        ? `${selectedMember.first_name} ${selectedMember.last_name} (${selectedMember.email})`
+                        : "-- Choose a member --"}
+                    </span>
+                    <Search size={16} className="text-muted-foreground" />
+                  </div>
+
+                  {dropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-slate-700 border border-border rounded-lg shadow-lg max-h-80 overflow-hidden">
+                      <div className="sticky top-0 p-2 bg-slate-700 border-b border-border">
+                        <div className="relative">
+                          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                          <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search members..."
+                            className="w-full pl-10 pr-8 py-2 rounded bg-slate-600/50 text-foreground border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none text-sm"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          {searchTerm && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSearchTerm("");
+                              }}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                              <X size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="overflow-y-auto max-h-64">
+                        {filteredMembers.length > 0 ? (
+                          filteredMembers.map((member) => (
+                            <div
+                              key={member.id}
+                              onClick={() => {
+                                setSelectedMemberId(member.id);
+                                setDropdownOpen(false);
+                                setSearchTerm("");
+                              }}
+                              className={`px-4 py-3 cursor-pointer transition-colors ${
+                                selectedMemberId === member.id
+                                  ? "bg-primary/20 text-primary"
+                                  : "hover:bg-slate-600/50 text-foreground"
+                              }`}
+                            >
+                              <div className="font-medium">
+                                {member.first_name} {member.last_name}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {member.email} • {member.username}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 text-center text-muted-foreground">
+                            No members found
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Date and Duration */}
@@ -234,11 +352,11 @@ const WorkoutLogging = () => {
               {/* Save Button */}
               <Button
                 onClick={handleSaveWorkout}
-                disabled={!selectedMemberId || workoutExercises.some(ex => !ex.name || !ex.sets || !ex.reps)}
+                disabled={!selectedMemberId || workoutExercises.some(ex => !ex.name || !ex.sets || !ex.reps) || loading}
                 className="w-full py-3 text-lg font-semibold flex items-center justify-center gap-2"
               >
                 <Save size={20} />
-                Save Workout
+                {loading ? "Saving..." : "Save Workout"}
               </Button>
             </div>
           </div>
